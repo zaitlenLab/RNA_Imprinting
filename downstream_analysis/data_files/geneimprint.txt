@@ -1,0 +1,245 @@
+Gene 	Aliases 	Location 	Status 	Expressed Allele
+NDUFA4P1 	NDUFA4  	1p13.3  	Predicted 	Paternal
+GFI1 	GFI-1, ZNF163, FLJ94509  	1p22 AS  	Predicted 	Paternal
+DIRAS3 	ARHI, NOEY2  	1p31 AS  	Imprinted 	Paternal
+FUCA1 	FUCA  	1p34 AS  	Predicted 	Paternal
+RNU5D-1 	U5DL, U5DS, RNU5D  	1p34.1 AS  	Imprinted 	Paternal
+BMP8B 	OP2, BMP8, MGC131757  	1p35-p32 AS  	Predicted 	Paternal
+DVL1 	DVL, MGC54245  	1p36 AS  	Predicted 	Maternal
+WDR8 	FLJ20430, MGC99569  	1p36.3 AS  	Predicted 	Maternal
+TP73 	P73  	1p36.3  	Imprinted 	Maternal
+RPL22 	EAP, HBP15, HBP15/L22  	1p36.3-p36.2 AS  	Predicted 	Paternal
+PRDM16 	MEL1, PFM13, KIAA1675, MGC166915  	1p36.23-p33  	Predicted 	Paternal
+PEX10 	NALD, RNF69, MGC1998  	1p36.32 AS  	Predicted 	Maternal
+TMEM52 	  	1p36.33 AS  	Predicted 	Paternal
+HSPA6 	  	1q23  	Predicted 	Maternal
+PTPN14 	PEZ, PTP36, MGC126803  	1q32.2 AS  	Predicted 	Maternal
+HIST3H2BB 	  	1q42.13  	Predicted 	Maternal
+OBSCN 	UNC89, FLJ14124, KIAA1556, KIAA1639, MGC120409, MGC120410, MGC120411, MGC120412, MGC138590, DKFZp666E245  	1q42.13  	Predicted 	Paternal
+OR11L1 	  	1q44 AS  	Predicted 	Paternal
+LRRTM1 	  	2p12 AS  	Imprinted 	Paternal
+VAX2 	DRES93  	2p13  	Predicted 	Maternal
+OTX1 	FLJ38361, MGC15736  	2p13  	Predicted 	Maternal
+COMMD1 	MURR1, C2orf5, MGC27155  	2p15  	Not Imprinted 	Biallelic
+CCDC85A 	KIAA1912  	2p16.1  	Predicted 	Paternal
+ABCG8 	GBD4, STSL, MGC142217  	2p21  	Predicted 	Maternal
+CYP1B1 	CP1B, GLC3A, P4501B1  	2p21 AS  	Predicted 	Paternal
+ZFP36L2 	BRF2, ERF2, ERF-2, TIS11D, RNF162C  	2p22.3-p21 AS  	Predicted 	Maternal
+GPR1 	  	2q33.3 AS  	Imprinted 	Paternal
+ZDBF2 	  	2q33.3  	Imprinted 	Paternal
+TIGD1 	EEYORE  	2q37.1 AS  	Predicted 	Paternal
+MYEOV2 	  	2q37.3 AS  	Predicted 	Paternal
+ALDH1L1 	FTHFD, DKFZp781N0997  	3q21.3 AS  	Predicted 	Maternal
+ZIC1 	ZIC, ZNF201  	3q24  	Predicted 	Maternal
+HES1 	HHL, HRY, HES-1, bHLHb39, FLJ20408  	3q28-q29  	Predicted 	Paternal
+FGFRL1 	FHFR, FGFR5  	4p16  	Predicted 	Maternal
+KIAA1530 	MGC117169  	4p16.3  	Predicted 	Maternal
+SPON2 	DIL1, DIL-1, Mindin, M-spondin  	4p16.3 AS  	Predicted 	Paternal
+NAP1L5 	DRLM  	4q22.1 AS  	Imprinted 	Paternal
+GAB1 	  	4q31.21  	Not Imprinted 	Biallelic
+ADAMTS16 	FLJ16731, ADAMTS16s  	5p15  	Predicted 	Maternal
+CDH18 	CDH14, CDH24, CDH14L, EY-CADHERIN  	5p15.2-p15.1 AS  	Predicted 	Paternal
+CSF2 	GMCSF, MGC131935, MGC138897  	5q31.1  	Predicted 	Maternal
+PRIM2 	p58, PRIM2A  	6p12-p11.1 AS  	Conflicting Data 	Biallelic
+BTNL2 	SS2, BTL-II, HSBLMHC1  	6p21.3 AS  	Predicted 	Maternal
+FAM50B 	X5L, D6S2654E  	6p25.2  	Imprinted 	Paternal
+MRAP2 	C6orf117, bA51G5.2, RP11-51G5.2  	6q14.2  	Predicted 	Paternal
+C6orf117 	RP11-51G5.2  	6q14.3  	Predicted 	Paternal
+AIM1 	ST4, CRYBG1  	6q21  	Imprinted 	Paternal
+LIN28B 	CSDD2  	6q21  	Imprinted 	Paternal
+PLAGL1 	ZAC, LOT1, ZAC1, MGC126275, MGC126276, DKFZp781P1017  	6q24-q25 AS  	Imprinted 	Paternal
+HYMAI 	NCRNA00020  	6q24.2 AS  	Imprinted 	Paternal
+SLC22A2* 	OCT2, MGC32628  	6q26 AS  	Imprinted 	Maternal
+IGF2R 	MPR1, MPRI, CD222, CIMPR, M6P-R  	6q26  	Imprinted 	Biallelic
+SLC22A3* 	EMT, EMTH, OCT3  	6q26-q27  	Imprinted 	Maternal
+BRP44L 	CGI-129, dJ68L15.3  	6q27 AS  	Predicted 	Paternal
+GRB10 	RSS, IRBP, MEG1, GRB-IR, Grb-10, KIAA0207  	7p12-p11.2 AS  	Imprinted 	Isoform Dependent
+DDC 	AADC  	7p12.2 AS  	Imprinted 	Isoform Dependent
+GLI3 	PHS, ACLS, GCPS, PAPA, PAPB, PAP-A, PAPA1, PPDIV  	7p13 AS  	Predicted 	Maternal
+HOXA4 	HOX1, HOX1D  	7p15-p14 AS  	Predicted 	Maternal
+HOXA11 	HOX1, HOX1I  	7p15-p14 AS  	Predicted 	Maternal
+HOXA3 	HOX1, HOX1E, MGC10155  	7p15-p14 AS  	Predicted 	Maternal
+HOXA2 	HOX1K  	7p15-p14 AS  	Predicted 	Maternal
+EVX1 	  	7p15-p14  	Predicted 	Paternal
+HOXA5 	HOX1, HOX1C, HOX1.3, MGC9376  	7p15-p14 AS  	Predicted 	Maternal
+TMEM60 	DC32, C7orf35, MGC74482  	7q11.23 AS  	Predicted 	Paternal
+MAGI2 	AIP1, AIP-1, ARIP1, SSCAM, MAGI-2, ACVRIP1  	7q21 AS  	Imprinted 	Maternal
+PEG10 	EDR, HB-1, Mar2, MEF3L, Mart2, RGAG3  	7q21  	Imprinted 	Paternal
+ASB4 	ASB-4, MGC142039, MGC142041  	7q21-q22  	Not Imprinted 	Biallelic
+SGCE 	ESG, DYT11  	7q21-q22 AS  	Imprinted 	Paternal
+PON2 	  	7q21.3 AS  	Not Imprinted 	Biallelic
+PON3 	  	7q21.3 AS  	Not Imprinted 	Biallelic
+CALCR 	CRT, CTR, CTR1  	7q21.3 AS  	Provisional Data 	Maternal
+PON1 	ESA, PON, MVCD5  	7q21.3 AS  	Provisional Data 	Maternal
+PPP1R9A 	NRB1, NRBI, FLJ20068, KIAA1222, Neurabin-I  	7q21.3  	Imprinted 	Maternal
+DLX5 	  	7q22 AS  	Imprinted 	Maternal
+TFPI2 	PP5, REF1, TFPI-2, FLJ21164  	7q22 AS  	Imprinted 	Maternal
+COPG2IT1 	CIT1, COPG2AS, FLJ41646, NCRNA00170, DKFZP761N09121  	7q32  	Imprinted 	Paternal
+CPA4 	CPA3  	7q32  	Imprinted 	Maternal
+COPG2 	2-COP, FLJ11781, DKFZp761N09121  	7q32 AS  	Conflicting Data 	Paternal
+MEST 	PEG1, MGC8703, MGC111102, DKFZp686L18234  	7q32  	Imprinted 	Paternal
+MESTIT1 	MEST-IT, PEG1-AS, MEST-AS1, MEST-IT1, NCRNA00040  	7q32.2 AS  	Imprinted 	Paternal
+KLF14 	BTEB5  	7q32.3 AS  	Imprinted 	Maternal
+FASTK 	FAST  	7q35 AS  	Predicted 	Maternal
+SLC4A2 	AE2, HKB3, BND3L, NBND3, EPB3L1  	7q35-q36  	Predicted 	Maternal
+PURG 	PURG-A, PURG-B, MGC119274  	8p11 AS  	Predicted 	Paternal
+DLGAP2 	DAP2, SAPAP2  	8p23  	Imprinted 	Paternal
+NKAIN3 	FAM77D, FLJ39630  	8q12.3  	Predicted 	Paternal
+LY6D 	E48  	8q24-qter AS  	Predicted 	Paternal
+GPT 	AAT1, ALT1, GPT1  	8q24.3  	Predicted 	Maternal
+KCNK9 	KT3.2, TASK3, K2p9.1, TASK-3, MGC138268, MGC138270  	8q24.3 AS  	Imprinted 	Maternal
+ZFAT-AS1 	ZFATAS, ZFAT-AS, SAS-ZFAT, NCRNA00070  	8q24.22  	Imprinted 	Paternal
+ZFAT 	AITD3, ZFAT1, ZNF406  	8q24.22 AS  	Imprinted 	Paternal
+GLIS3 	ZNF515  	9p24.2 AS  	Imprinted 	Paternal
+APBA1 	X11, X11A, MINT1, D9S411E, X11ALPHA  	9q13-q21.1 AS  	Predicted 	Paternal
+C9orf85 	MGC61599, RP11-346E17.2  	9q21.13  	Predicted 	Paternal
+FLJ46321 	FLJ46321  	9q21.32  	Predicted 	Maternal
+LMX1B 	NPS1, LMX1.2, MGC138325, MGC142051  	9q34  	Predicted 	Maternal
+C9orf116 	FLJ13945, MGC29761, RP11-426A6.4  	9q34.3 AS  	Predicted 	Paternal
+EGFL7 	ZNEU1, MGC111117, VE-STATIN, RP11-251M1.2  	9q34.3  	Predicted 	Paternal
+PHPT1 	PHP14, CGI-202, HSPC141, bA216L13.10, DKFZp564M173, RP11-216L13.10  	9q34.3  	Predicted 	Maternal
+SFMBT2 	  	10p14 AS  	Not Imprinted 	Biallelic
+GATA3 	HDR, MGC2346, MGC5199, MGC5445  	10p15  	Predicted 	Paternal
+CTNNA3 	VR22, MGC26194, MGC75041  	10q22.2 AS  	Provisional Data 	Maternal
+LDB1 	NLI, CLIM2  	10q24-q25 AS  	Predicted 	Maternal
+NKX6-2 	GTX, NKX6B, NKX6.2, MGC126684  	10q26 AS  	Predicted 	Maternal
+PAOX 	PAO, MGC45464, DKFZp434J245  	10q26.3  	Predicted 	Maternal
+C10orf93 	bB137A17.3, RP13-137A17.3  	10q26.3 AS  	Predicted 	Maternal
+C10orf91 	bA432J24.4, RP11-432J24.4  	10q26.3  	Predicted 	Maternal
+VENTX 	NA88A, HPX42B, VENTX2, MGC119910, MGC119911  	10q26.3  	Predicted 	Maternal
+INPP5F V2 	SAC2, hSAC2, MSTP007, MSTPO47, FLJ13081, KIAA0966, MGC59773, MGC131851  	10q26.11  	Imprinted 	Paternal
+WT1-Alt trans 	WT1, GUD, WAGR, WT33, WIT-2  	11p13 AS  	Imprinted 	Paternal
+AMPD3 	  	11p15  	Not Imprinted 	Biallelic
+KCNQ1OT1 	LIT1, KvDMR1, KCNQ10T1, KvLQT1-AS, long QT intronic transcript 1  	11p15  	Imprinted 	Paternal
+PKP3 	  	11p15  	Predicted 	Maternal
+KCNQ1DN 	BWRT, HSA404617  	11p15.4  	Imprinted 	Maternal
+OSBPL5 	ORP5, OBPH1, FLJ42929  	11p15.4 AS  	Imprinted 	Maternal
+ZNF215 	BAZ2, ZKSCAN11  	11p15.4  	Provisional Data 	Maternal
+IGF2 	INSIGF, pp9974, C11orf43, FLJ22066, FLJ44734  	11p15.5 AS  	Imprinted 	Paternal
+IGF2AS 	PEG8, MGC168198  	11p15.5  	Imprinted 	Paternal
+IFITM1 	9-27, CD225, IFI17, LEU13  	11p15.5  	Predicted 	Maternal
+PHLDA2 	IPL, BRW1C, BWR1C, HLDA2, TSSC3  	11p15.5 AS  	Imprinted 	Maternal
+CDKN1C 	BWS, WBS, p57, BWCR, KIP2  	11p15.5 AS  	Imprinted 	Maternal
+ASCL2 	ASH2, HASH2, MASH2, bHLHa45  	11p15.5 AS  	Not Imprinted 	Biallelic
+SLC22A18AS 	BWR1B, BWSCR1B, ORCTL2S, SLC22A1LS, p27-BWR1B  	11p15.5 AS  	Provisional Data 	Maternal
+KCNQ1 	LQT, RWS, WRS, LQT1, SQT2, ATFB1, ATFB3, JLNS1, KCNA8, KCNA9, Kv1.9, Kv7.1, KVLQT1, FLJ26167  	11p15.5  	Imprinted 	Maternal
+TRPM5 	MTR1, LTRPC5  	11p15.5 AS  	Provisional Data 	Paternal
+H19 	ASM, BWS, ASM1, MGC4485, PRO2605, D11S813E  	11p15.5 AS  	Imprinted 	Maternal
+TSPAN32 	ART1, PHMX, PHEMX, TSSC6, FLJ17158, FLJ97586, MGC22455  	11p15.5  	Not Imprinted 	Biallelic
+TSSC4 	  	11p15.5  	Not Imprinted 	Biallelic
+SLC22A18 	HET, ITM, BWR1A, IMPT1, TSSC5, ORCTL2, BWSCR1A, SLC22A1L, p45-BWR1A, DKFZp667A184  	11p15.5  	Imprinted 	Maternal
+NAP1L4 	NAP2, NAP2L, hNAP2, MGC4565, NAP1L4b  	11p15.5 AS  	Unknown 	Unknown
+INS 	ILPR, IRDN  	11p15.5 AS  	Imprinted 	Paternal
+TH 	TYH, DYT14, DYT5b  	11p15.5 AS  	Unknown 	Unknown
+B4GALNT4 	FLJ25045  	11p15.5  	Predicted 	Maternal
+CD81 	S5.7, TAPA1, TSPAN28  	11p15.5  	Not Imprinted 	Biallelic
+RAB1B 	  	11q12  	Predicted 	Maternal
+ANO1 	DOG1, TAOS2, ORAOV2, TMEM16A  	11q13.3  	Imprinted 	Maternal
+DHCR7 	SLOS  	11q13.4 AS  	Not Imprinted 	Biallelic
+KBTBD3 	BKLHD3, FLJ30685  	11q22.3 AS  	Predicted 	Paternal
+ZC3H12C 	MCPIP3  	11q22.3  	Imprinted 	Paternal
+SDHD 	PGL, CBT1, PGL1, SDH4  	11q23  	Conflicting Data 	Paternal
+NTM 	HNT, NTRI, IGLON2  	11q25  	Imprinted 	Maternal
+ABCC9 	SUR2, ABC37, CMD1O, FLJ36852  	12p12.1 AS  	Predicted 	Maternal
+RBP5 	CRBP3, CRBPIII, CRBP-III  	12p13.31 AS  	Imprinted 	Maternal
+SLC38A4 	ATA3, NAT3, PAAT, FLJ10191, MGC126876  	12q13 AS  	Unknown 	Unknown
+SLC26A10 	  	12q13  	Predicted 	Maternal
+HOXC9 	HOX3, HOX3B  	12q13.3  	Predicted 	Maternal
+HOXC4 	HOX3, cp19, HOX3E  	12q13.3  	Predicted 	Maternal
+CDK4 	CMM3, PSK-J3, MGC14458  	12q14 AS  	Predicted 	Maternal
+E2F7 	FLJ12981  	12q21.2 AS  	Predicted 	Maternal
+DCN 	CSCD, PG40, PGII, PGS2, DSPG2, SLRR1B  	12q21.33 AS  	Unknown 	Unknown
+KIAA1545 	KIAA1545  	12q24.33  	Predicted 	Maternal
+FBRSL1 	KIAA1545  	12q24.33  	Predicted 	Maternal
+HTR2A 	HTR2, 5-HT2A  	13q14-q21 AS  	Conflicting Data 	Maternal
+RB1 	RB, pRb, OSRC, pp110, p105-Rb  	13q14.2  	Imprinted 	Maternal
+FLJ40296 	FLJ40296, MGC149404, MGC149405  	13q21.1  	Predicted 	Maternal
+FAM70B 	MGC20579, RP11-199F6.1  	13q34  	Predicted 	Maternal
+FOXG1 	BF1, BF2, QIN, FKH2, HBF2, HFK1, HFK2, HFK3, KHL2, FHKL3, FKHL1, FKHL2, FKHL3, FKHL4, HBF-1, HBF-2, HBF-3, FOXG1A, FOXG1B, FOXG1C, HBF-G2  	14q13  	Predicted 	Paternal
+FERMT2 	MIG2, KIND2, mig-2, UNC112, PLEKHC1, UNC112B, FLJ34213, FLJ44462, DKFZp686G11125  	14q22.1 AS  	Predicted 	Paternal
+DLK1 	DLK, FA1, ZOG, pG2, PREF1, Pref-1  	14q32  	Imprinted 	Paternal
+DIO3 	D3, 5DIII, TXDI3, DIOIII  	14q32  	Unknown 	Unknown
+MEG3 	GTL2, FP504, prebp1, PRO0518, PRO2160, FLJ31163, FLJ42589  	14q32  	Imprinted 	Maternal
+RTL1 	MART1, PEG11, LOC388015  	14q32.31 AS  	Imprinted 	Paternal
+MEG8 	Rian  	14q32.31  	Imprinted 	Maternal
+MAGEL2 	nM15, NDNL1  	15q11-q12 AS  	Imprinted 	Paternal
+NPAP1 	C15orf2  	15q11-q13  	Imprinted 	Unknown
+UBE3A 	AS, ANCR, E6-AP, HPVE6A, EPVE6AP, FLJ26981  	15q11-q13 AS  	Imprinted 	Maternal
+ZNF127AS 	MKRN3AS, Znp127as  	15q11-q13  	Unknown 	Unknown
+MKRN3 	D15S9, RNF63, ZFP127, ZNF127, MGC88288  	15q11-q13  	Imprinted 	Paternal
+PWCR1 	PET1, non-coding RNA in the Prader-Willi critical region  	15q11.2  	Imprinted 	Paternal
+SNORD108 	HBII-437, HBII-437 C/D box snoRNA  	15q11.2  	Imprinted 	Paternal
+SNORD107 	HBII-436, HBII-436 C/D box snoRNA  	15q11.2  	Imprinted 	Paternal
+SNORD116@ 	PET1, PWCR1, HBII-85  	15q11.2  	Imprinted 	Paternal
+SNRPN 	SMN, PWCR, SM-D, RT-LI, HCERN3, SNRNP-N, FLJ33569, FLJ36996, FLJ39265, MGC29886, SNURF-SNRPN, DKFZp762N022, DKFZp686C0927, DKFZp761I1912, DKFZp686M12165  	15q11.2  	Imprinted 	Paternal
+ATP10A 	ATPVA, ATPVC, ATP10C, KIAA0566  	15q11.2 AS  	Imprinted 	Maternal
+SNORD115@ 	HBII-52  	15q11.2  	Imprinted 	Paternal
+SNORD115-48 	HBII-52-48  	15q11.2  	Imprinted 	Paternal
+SNORD109B 	HBII-438B, HBII-438B C/D box snoRNA  	15q11.2  	Imprinted 	Paternal
+SNORD109A 	HBII-438A  	15q11.2  	Imprinted 	Paternal
+GABRA5 	MGC138184  	15q11.2-q12  	Conflicting Data 	Paternal
+NDN 	HsT16328  	15q11.2-q12 AS  	Imprinted 	Paternal
+GABRB3 	MGC9051  	15q11.2-q12 AS  	Conflicting Data 	Paternal
+SNURF 	  	15q12  	Imprinted 	Paternal
+SNORD64 	HBII-13, HBII-13 snoRNA  	15q12  	Imprinted 	Paternal
+GABRG3 	  	15q12  	Conflicting Data 	Paternal
+GATM 	AT, AGAT  	15q21.1 AS  	Unknown 	Unknown
+RASGRF1 	GNRP, GRF1, CDC25, GRF55, CDC25L, H-GRF55, PP13187  	15q24.2 AS  	Unknown 	Unknown
+MIR184 	EDICT, MIRN184, miR-184  	15q25.1  	Unknown 	Unknown
+ZNF597 	  	16p13.3 AS  	Imprinted 	Maternal
+NAA60 	HAT4, NAT15  	16p13.3  	Imprinted 	Maternal
+SOX8 	MGC24837  	16p13.3  	Predicted 	Paternal
+SALL1 	TBS, HSAL1, ZNF794  	16q12.1 AS  	Predicted 	Maternal
+C16orf57 	HVSL1, FLJ13154  	16q21  	Predicted 	Maternal
+ACD 	PIP1, PTOP, TPP1, TINT1  	16q22.1 AS  	Predicted 	Maternal
+FOXF1 	FKHL5, ACDMPV, FREAC1, MGC105125  	16q24  	Predicted 	Maternal
+TMEM88 	FLJ20025, MGC71744  	17p13.1  	Predicted 	Maternal
+PYY2 	  	17q11  	Predicted 	Paternal
+HOXB2 	K8, HOX2, HOX2H, Hox-2.8  	17q21-q22 AS  	Predicted 	Maternal
+HOXB3 	HOX2, HOX2G, Hox-2.7  	17q21.3 AS  	Predicted 	Maternal
+LOC100131170 	LOC100131170  	17q25.3 AS  	Predicted 	Paternal
+IMPACT 	MGC33718  	18q11.2-q12.1  	Not Imprinted 	Biallelic
+BRUNOL4 	CELF4, BRUNOL-4  	18q12 AS  	Predicted 	Maternal
+FAM59A 	GAREM, Gm944, C18orf11  	18q12.1 AS  	Predicted 	Paternal
+TCEB3C 	HsT829, TCEB3L2, Elongin A3  	18q21.1 AS  	Imprinted 	Maternal
+PPAP2C 	LPP2, PAP-2c, PAP2-g  	19p13 AS  	Predicted 	Maternal
+DNMT1 	AIM, DNMT, MCMT, CXXC9, HSN1E, ADCADN  	19p13.2 AS  	Imprinted 	Paternal
+CHMP2A 	BC2, BC-2, VPS2, CHMP2, VPS2A  	19q AS  	Predicted 	Maternal
+TSHZ3 	TSH3, ZNF537, FLJ54422, KIAA1474  	19q12 AS  	Predicted 	Paternal
+CHST8 	GalNAc4ST, GALNAC4ST1  	19q13.1  	Predicted 	Maternal
+ZNF225 	MGC119735  	19q13.2  	Predicted 	Paternal
+MZF1 	MZF-1, MZF1B, ZNF42, Zfp98, ZSCAN6  	19q13.4 AS  	Predicted 	Maternal
+ZIM2 	ZNF656  	19q13.4 AS  	Imprinted 	Paternal
+MIMT1 	MIM1, LINC00067, NCRNA00067  	19q13.4  	Imprinted 	Paternal
+ZNF264 	Zfp264  	19q13.4  	Unknown 	Unknown
+LILRB4 	HM18, ILT3, LIR5, CD85K, LIR-5, LILRB5  	19q13.4  	Predicted 	Maternal
+PEG3 	PW1, ZNF904, ZSCAN24  	19q13.4 AS  	Imprinted 	Paternal
+ZNF229 	FLJ34222  	19q13.31 AS  	Predicted 	Maternal
+MIR371A 	C19MC, MIR371, MIRN371, hsa-mir-371, hsa-mir-371a  	19q13.42  	Imprinted 	Paternal
+NLRP2 	NBS1, PAN1, NALP2, PYPAF2, CLR19.9  	19q13.42  	Imprinted 	Maternal
+USP29 	MGC163266, MGC163270, HOM-TES-84/86  	19q13.43  	Unknown 	Unknown
+ZIM3 	ZNF657  	19q13.43 AS  	Unknown 	Unknown
+ISM1 	ISM, Isthmin, C20orf82, bA149I18.1, dJ1077I2.1  	20p12.1  	Predicted 	Paternal
+C20orf82 	bA149I18.1, dJ1077I2.1  	20p12.1  	Predicted 	Paternal
+PSIMCT-1 	  	20q11.2  	Imprinted 	Paternal
+BLCAP 	BC10  	20q11.2-q12 AS  	Imprinted 	Isoform Dependent
+NNAT 	Peg5  	20q11.2-q12  	Imprinted 	Paternal
+HM13 	H13, SPP, IMP1, PSL3, IMPAS, SPPL1, PSENL3, IMPAS-1, MSTP086, dJ324O17.1  	20q11.21  	Unknown 	Unknown
+MCTS2 	  	20q11.21  	Imprinted 	Paternal
+GDAP1L1 	dJ881L22.1, dJ995J12.1.1  	20q12  	Imprinted 	Paternal
+SGK2 	H-SGK2, dJ138B7.2  	20q13.2  	Imprinted 	Paternal
+GNAS 	AHO, GSA, GSP, POH, GPSA, NESP, GNAS1, PHP1A, PHP1B, C20orf45, MGC33735, dJ309F20.1.1, dJ806M20.3.3  	20q13.3  	Imprinted 	Isoform Dependent
+COL9A3 	IDD, MED, EDM3, FLJ90759, DJ885L7.4.1  	20q13.3  	Predicted 	Maternal
+L3MBTL 	L3MBTL1, FLJ41181, KIAA0681, H-L(3)MBT, dJ138B7.3, DKFZp586P1522  	20q13.12  	Imprinted 	Paternal
+MIR296 	MIRN296, miRNA296  	20q13.32 AS  	Imprinted 	Paternal
+MIR298 	MIRN298, hsa-mir-298  	20q13.32 AS  	Imprinted 	Paternal
+SANG 	SANG, Nespas  	20q13.32  	Imprinted 	Paternal
+GNASAS 	SANG, NESPAS, GNAS1AS, NCRNA00075  	20q13.32 AS  	Imprinted 	Paternal
+C20orf20 	Eaf7, MRGBP, URCC4, MRG15BP, FLJ10914  	20q13.33  	Predicted 	Maternal
+SIM2 	SIM, bHLHe15, MGC119447  	21q22.2  	Predicted 	Paternal
+DGCR6 	  	22q11.21  	Imprinted 	Random
+DGCR6L 	  	22q11.21 AS  	Imprinted 	Random
+FLJ20464 	FLJ20464  	22q12.2  	Predicted 	Paternal
+TSIX 	XISTAS, NCRNA00013  	Xq13.2  	Not Imprinted 	Biallelic
+XIST 	XCE, XIC, SXI1, swd66, DXS1089, DXS399E, NCRNA00001, DKFZp779P0129  	Xq13.2 AS  	Not Imprinted 	Biallelic
+
