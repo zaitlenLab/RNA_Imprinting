@@ -1,10 +1,10 @@
 Imprinting analysis for Baran et al. 
 
 Tuuli Lappalainen, New York Genome Center
-August 2014
+May 6th 2015
 
-Note that this file includes only the steps to produce results and figures of the manuscript. 
-Due to limitations in the public availability of GTEx data, most users will not be able to rerun the analysis. 
+Note that this file includes only the steps to produce results and figures of the manuscript - many additional analyses were performed to ensure their robustness. 
+Due to limitations in the public availability of GTEx data, most users will not be able to rerun the analysis as is. 
 Thus, the main motivation for sharing the code is transcaprency of the analysis. 
 
 
@@ -36,46 +36,81 @@ perl ~/imprinting/utilities/CombineResList_filter5_model15_pertissue_nochr.pl GD
 
 ##########  Gene lists  ##########
 
-#the criteria to retrieve the list of imprinted genes are described in the supplementary material
-
 cd ~/tuuli_lab/tlappalainen/imprint/analysis/imprint/
 
-final <- read.table("final.txt", as.is=T, fill=T, header=F, col.names=c(1:40))
-final <- final[final[,1]=="final",]
-final[final[,3]=="GD",4] <- "GD_LCL"
-final[final[,3]=="GENCORD" & final[,4]=="LCL",4] <- "GC_LCL"
-final[final[,3]=="GENCORD" & final[,4]=="TCELL",4] <- "GC_TCELL"
-final[final[,3]=="GENCORD" & final[,4]=="FIBRBLS",4] <- "GC_FIBRBLS"
-final[final[,3]=="GENCORD" & final[,5]=="LCL",5] <- "GC_LCL"
-final[final[,3]=="GENCORD" & final[,5]=="TCELL",5] <- "GC_TCELL"
-final[final[,3]=="GENCORD" & final[,5]=="FIBRBLS",5] <- "GC_FIBRBLS"
-final[final[,3]=="GENCORD" & final[,6]=="LCL",6] <- "GC_LCL"
-final[final[,3]=="GENCORD" & final[,6]=="TCELL",6] <- "GC_TCELL"
-final[final[,3]=="GENCORD" & final[,6]=="FIBRBLS",6] <- "GC_FIBRBLS"
-spl <- split(final, final[,2])
-gt <- vector("list", length(spl))
-names(gt) <- names(spl)
-for(i in 1:length(spl)) {
-	gt[[i]] <- (unique(as.character(t(spl[[i]][,4:ncol(spl[[i]])]))))	
-	gt[[i]] <- (gt[[i]][gt[[i]]!="" & gt[[i]]!="NA" & !is.na(gt[[i]])])
+#remList has been modified to add:
+#remAnn  RP11-701H24.3
+#remAnn  AL132709.5
+#remAnn  RP11-395B7.2
+#remFam  NLRP2
+#remLCL  HM13
+
+#ensg2nametab.txt modified to change INPP5F to INPP5F_V2
+
+
+data <- read.table("known.novel.classify.txt", as.is=T, header=T)
+data[,4] <- replace(data[,4], data[,4]=="INPP5F", "INPP5F_V2")
+write.table(data, "known.novel.classify.txt", quote=F, row.names=F, col.names=T, sep='\t')
+
+
+final <- read.table("known.novel.classify.txt", as.is=T, fill=T, header=T)
+rem <- read.table("remList.txt", as.is=T)
+keep <- vector("integer")
+for(i in 1:nrow(final)) {
+	if (!any(rem[,2]==final[,4][i])) {
+		keep <- c(keep, i)
+	}
 }
-g <- rep(names(gt), times=unlist(lapply(gt, length)))
-ensg <- read.table("ensg2nametab.txt", as.is=T, sep="\t")
-ensg <- ensg[!duplicated(ensg[,2]),]
-rownames(ensg) <- ensg[,2]
-e <- na.omit(ensg[g,1])
-t <- cbind(g, e, unlist(gt))
-write.table(t, "final_impr_tab.txt", row.names=F, col.names=F, sep="\t", quote=F)
+final <- final[keep,]
+final[final[,1]=="../gdresBi",2] <- "GD_LCL" 
+final[final[,1]=="../gencordresBi" & final[,2]=="LCL",2] <- "GC_LCL" 
+final[final[,1]=="../gencordresBi" & final[,2]=="TCELL",2] <- "GC_TCELL" 
+final[final[,1]=="../gencordresBi" & final[,2]=="FIBRBLS",2] <- "GC_FIBRBLS" 
+final_imp_gene <- unique(final[,4][final[,5]=="-"])
+keep <- vector("integer")
+for(i in 1:nrow(final)) {
+	if (any(final_imp_gene==final[,4][i])) {
+		keep <- c(keep, i)
+	}
+}
+final_imp <- final[keep,]
+write.table(final_imp[,c(4,3,2)], "final_impr_tab.txt", row.names=F, col.names=F, sep="\t", quote=F)
+write.table(final_imp[,2:ncol(final)], "final_impr_bi_imp.txt", row.names=F, col.names=T, sep="\t", quote=F)
+final_known <- final[final[,8]=="+" & final[,9]!="M",]
+write.table(final_known[,c(4,3,2)], "final_known_tab.txt", row.names=F, col.names=F, sep="\t", quote=F)
+write.table(final_known[,2:ncol(final)], "final_known_tab_bi_imp.txt", row.names=F, col.names=T, sep="\t", quote=F)
+
 
 cut -f 1 final_impr_tab.txt | sort -u  >final_impr_genelist.txt
-perl ~/utilities/intersect.pl final_impr_genelist.txt 0 ensg2nametab.txt 1 > final_impr_genelist_ensg2name.txt
+cut -f 1,2 final_impr_tab.txt | sort -u | awk '{print($2 "\t" $1 )}' > final_impr_genelist_ensg2name.txt
 
-cd ~/tuuli_lab/tlappalainen/imprint/analysis/imprint/
-perl ~/utilities/intersect.pl known_morcos_geneimprint.txt 0 ensg2nametab.txt 0 > known_morcos_geneimprint_ensg2name.txt
-
-
+cut -f 2 final_known_tab.txt | sort -u  >known_otago.txt
+cut -f 1,2 final_known_tab.txt | sort -u | awk '{print($2 "\t" $1 )}' > known_otago_ensg2name.txt
 
 
+
+#########  Genes of intrest  ##########
+
+#genes_of_interest_name.txt
+perl ~/utilities/intersect.pl genes_of_interest_name.txt 0 ensg2nametab.txt 1 >extra_ensg2name.txt
+cat putgenes.txt extra_ensg2name.txt | sort -u >extra_put_ensg2name.txt
+perl ~/utilities/setdiff.pl final_impr_genelist_ensg2name.txt 0 extra_known_ensg2name.txt 0 >extra_ensg2name_1.txt
+perl ~/utilities/setdiff.pl known_otago_ensg2name.txt 0 extra_ensg2name_1.txt 0 >extra_ensg2name.txt
+
+
+#########  all known and provisional genes in human  ##########
+
+ot <- read.table("otago.list.txt", as.is=T)
+otf <- ot[ot[,5]!="M",]
+otf <- otf[otf[,2]!="-",]
+og <- unique(otf[,2]) #133 genes
+final <- read.table("final_impr_tab.txt", as.is=T)
+#take only those that are not already included
+og_sd <- setdiff(og, unique(final[,1]))
+write.table(og_sd, "otago.list.human.genename.txt", quote=F, row.names=F, col.names=F)
+
+perl ~/utilities/intersect.pl otago.list.human.genename.txt 0 ensg2nametab.txt 1 >otago.human.all_ensg2name.txt
+perl ~/utilities/setdiff.pl final_impr_genelist_ensg2name.txt 0 otago.human.all_ensg2name.txt 0 >otago.human.bi_ensg2name.txt
 
 
 #########  Matlab haplotype files  ##########
@@ -189,7 +224,20 @@ echo 'perl ~/utilities/intersect_keepheader.pl ../final_impr_genelist_ensg2name.
 echo 'perl ~/utilities/intersect_keepheader.pl ../final_impr_genelist_ensg2name.txt 0 ../../../data/imprint/gtex/GTEX.1582.5MIMP.ASE.COV8.ANNOTPLUSGT.SINFO.BR.txt.filter5.model15.indxgen.txt 1 >GTEX.1582.5MIMP.ASE.COV8.ANNOTPLUSGT.SINFO.BR.txt.filter5.model15.indxgen.final_impr.txt' | qsub
 echo 'perl ~/utilities/intersect_keepheader.pl ../final_impr_genelist_ensg2name.txt 0 ../../../data/imprint/gtex/GTEX.1582.5MIMP.ASE.COV8.ANNOTPLUSGT.SINFO.BR.txt.filter5.model15.imp.indxgen.txt 1 >GTEX.1582.5MIMP.ASE.COV8.ANNOTPLUSGT.SINFO.BR.txt.filter5.model15.imp.indxgen.final_impr.txt' | qsub
 echo 'perl ~/utilities/intersect_keepheader.pl ../final_impr_genelist_ensg2name.txt 0 ../../../data/imprint/gtex/GTEX.1582.5MIMP.ASE.COV8.ANNOTPLUSGT.SINFO.BR.txt.impglr 1 >GTEX.1582.5MIMP.ASE.COV8.ANNOTPLUSGT.SINFO.BR.txt.impglr.final_impr.txt' | qsub
-echo 'perl ~/utilities/intersect_keepheader.pl ../known_morcos_geneimprint_ensg2name.txt 0 ../../../data/imprint/gtex/GTEX.1582.5MIMP.ASE.COV8.ANNOTPLUSGT.SINFO.BR.txt.impglr 1 >GTEX.1582.5MIMP.ASE.COV8.ANNOTPLUSGT.SINFO.BR.txt.impglr.known.txt' | qsub
+echo 'perl ~/utilities/intersect_keepheader.pl ../known_otago_ensg2name.txt 0 ../../../data/imprint/gtex/GTEX.1582.5MIMP.ASE.COV8.ANNOTPLUSGT.SINFO.BR.txt.impglr 1 >GTEX.1582.5MIMP.ASE.COV8.ANNOTPLUSGT.SINFO.BR.txt.impglr.known.txt' | qsub
+echo 'perl ~/utilities/intersect_keepheader.pl ../extra_ensg2name.txt 0 ../../../data/gtex/GTEX.1582.5MIMP.ASE.COV8.ANNOTPLUSGT.SINFO.BR.txt 21 >GTEX.1582.5MIMP.ASE.COV8.ANNOTPLUSGT.SINFO.BR.extra.txt' | qsub
+echo 'perl ~/utilities/intersect_keepheader.pl ../extra_ensg2name.txt 0 ../../../data/imprint/gtex/GTEX.1582.5MIMP.ASE.COV8.ANNOTPLUSGT.SINFO.BR.txt.filter5.model15.imp.indxgen.txt 1 >GTEX.1582.5MIMP.ASE.COV8.ANNOTPLUSGT.SINFO.BR.txt.filter5.model15.imp.indxgen.extra.txt' | qsub
+echo 'perl ~/utilities/intersect_keepheader.pl ../otago.human.bi_ensg2name.txt 0 ../../../data/gtex/GTEX.1582.5MIMP.ASE.COV8.ANNOTPLUSGT.SINFO.BR.txt 21 >GTEX.1582.5MIMP.ASE.COV8.ANNOTPLUSGT.SINFO.BR.otago.human.bi.txt' | qsub
+echo 'perl ~/utilities/intersect_keepheader.pl ../otago.human.bi_ensg2name.txt 0 ../../../data/imprint/gtex/GTEX.1582.5MIMP.ASE.COV8.ANNOTPLUSGT.SINFO.BR.txt.filter5.model15.imp.indxgen.txt 1 >GTEX.1582.5MIMP.ASE.COV8.ANNOTPLUSGT.SINFO.BR.txt.filter5.model15.imp.indxgen.otago.human.bi.txt' | qsub
+
+d <- read.table("GTEX.1582.5MIMP.ASE.COV8.ANNOTPLUSGT.SINFO.BR.txt.impglr.final_impr.txt", header=T, as.is=T)
+d[,3] <- replace(d[,3], d[,3]=="INPP5F", "INPP5F_V2")
+write.table(d, "GTEX.1582.5MIMP.ASE.COV8.ANNOTPLUSGT.SINFO.BR.txt.impglr.final_impr.txt", sep="\t", quote=F, row.names=F)
+
+d <- read.table("GTEX.1582.5MIMP.ASE.COV8.ANNOTPLUSGT.SINFO.BR.txt.impglr.known.txt", header=T, as.is=T)
+d[,3] <- replace(d[,3], d[,3]=="INPP5F", "INPP5F_V2")
+write.table(d, "GTEX.1582.5MIMP.ASE.COV8.ANNOTPLUSGT.SINFO.BR.txt.impglr.known.txt", sep="\t", quote=F, row.names=F)
+
 
 #retrieve only 11 tissues
 data <- read.table("../../../data/imprint/gtex/GTEX.1582.5MIMP.ASE.COV8.ANNOTPLUSGT.SINFO.BR.txt.impglr", sep="\t", header=T, as.is=T, fill=T)
@@ -200,6 +248,7 @@ for(i in 1:length(tis)) {
 }
 dataf <- do.call(rbind, l)
 dataf2 <- dataf[dataf[,20]>=5 & dataf[,21]>=2,]
+dataf2[,3] <- replace(dataf2[,3], dataf2[,3]=="INPP5F", "INPP5F_V2")
 write.table(dataf2, "GTEX.1582.5MIMP.ASE.COV8.ANNOTPLUSGT.SINFO.BR.txt.impglr.passed", row.names=F, sep="\t", quote=F)
 cut -f 2 GTEX.1582.5MIMP.ASE.COV8.ANNOTPLUSGT.SINFO.BR.txt.impglr.passed | sort -u >GTEX.1582.5MIMP.ASE.COV8.ANNOTPLUSGT.SINFO.BR.txt.impglr.passed.genes
 
@@ -207,26 +256,53 @@ cut -f 2 GTEX.1582.5MIMP.ASE.COV8.ANNOTPLUSGT.SINFO.BR.txt.impglr.passed | sort 
 cd ~/tuuli_lab/tlappalainen/imprint/data/gtex
 
 sh brain_subreg_impr.sh | head -n1
-perl ~/utilities/intersect_keepheader.pl ../../analysis/imprint/final_impr_genelist_ensg2name.txt 0 GTEX.1582.5MIMP.ASE.COV8.ANNOTPLUSGT.SINFO.BRAIN_BRNACC 21 >brsub/GTEX.1582.5MIMP.ASE.COV8.ANNOTPLUSGT.SINFO.BRAIN_BRNACC.final_impr.txt
+perl ~/Geneva/utilities/intersect_keepheader.pl ~/tuuli_lab/tlappalainen/imprint/analysis/imprint/final_impr_genelist_ensg2name.txt 0 ~/Geneva/data/imprint/data/gtex/GTEX.1582.5MIMP.ASE.COV8.ANNOTPLUSGT.SINFO.BRAIN_BRNACC 21 >~/Geneva/data/imprint/data/gtex/brsub/GTEX.1582.5MIMP.ASE.COV8.ANNOTPLUSGT.SINFO.BRAIN_BRNACC.impr.txt
 ##same for all subregions
 
 cd ~/tuuli_lab/tlappalainen/imprint/analysis/imprint/geuvadis/
 echo 'perl ~/utilities/intersect_keepheader.pl ../final_impr_genelist_ensg2name.txt 0 ../../../data/geuvadis/GD462.ASE.COV8.ANNOTPLUS.SINFO.txt 21 >GD462.ASE.COV8.ANNOTPLUS.SINFO.final_impr.txt' | qsub
 echo 'perl ~/utilities/intersect_keepheader.pl ../final_impr_genelist_ensg2name.txt 0 ../../../data/imprint/geuvadis/GD462.ASE.COV8.ANNOTPLUS.SINFO.txt.filter5.model15.indxgen.txt 1 >GD462.ASE.COV8.ANNOTPLUS.SINFO.txt.filter5.model15.indxgen.final_impr.txt' | qsub
 echo 'perl ~/utilities/intersect_keepheader.pl ../final_impr_genelist_ensg2name.txt 0 ../../../data/imprint/geuvadis/GD462.ASE.COV8.ANNOTPLUS.SINFO.txt.impglr.LCL 1 >GD462.ASE.COV8.ANNOTPLUS.SINFO.txt.impglr.final_impr.txt' | qsub
-echo 'perl ~/utilities/intersect_keepheader.pl ../known_morcos_geneimprint_ensg2name.txt 0 ../../../data/imprint/geuvadis/GD462.ASE.COV8.ANNOTPLUS.SINFO.txt.impglr.LCL 1 >GD462.ASE.COV8.ANNOTPLUS.SINFO.txt.impglr.known.txt' | qsub
+echo 'perl ~/utilities/intersect_keepheader.pl ../known_otago_ensg2name.txt 0 ../../../data/imprint/geuvadis/GD462.ASE.COV8.ANNOTPLUS.SINFO.txt.impglr.LCL 1 >GD462.ASE.COV8.ANNOTPLUS.SINFO.txt.impglr.known.txt' | qsub
+echo 'perl ~/utilities/intersect_keepheader.pl ../extra_ensg2name.txt 0 ../../../data/geuvadis/GD462.ASE.COV8.ANNOTPLUS.SINFO.txt 21 >GD462.ASE.COV8.ANNOTPLUS.SINFO.extra.txt' | qsub
+echo 'perl ~/utilities/intersect_keepheader.pl ../extra_ensg2name.txt 0 ../../../data/imprint/geuvadis/GD462.ASE.COV8.ANNOTPLUS.SINFO.txt.filter5.model15.indxgen.txt 1 >GD462.ASE.COV8.ANNOTPLUS.SINFO.txt.filter5.model15.indxgen.extra.txt' | qsub
+echo 'perl ~/utilities/intersect_keepheader.pl ../otago.human.bi_ensg2name.txt 0 ../../../data/geuvadis/GD462.ASE.COV8.ANNOTPLUS.SINFO.txt 21 >GD462.ASE.COV8.ANNOTPLUS.SINFO.otago.human.bi.txt' | qsub
+echo 'perl ~/utilities/intersect_keepheader.pl ../otago.human.bi_ensg2name.txt 0 ../../../data/imprint/geuvadis/GD462.ASE.COV8.ANNOTPLUS.SINFO.txt.filter5.model15.indxgen.txt 1 >GD462.ASE.COV8.ANNOTPLUS.SINFO.txt.filter5.model15.indxgen.otago.human.bi.txt' | qsub
+
 awk '$20>=5 && $21>=2 ' ../../../data/imprint/geuvadis/GD462.ASE.COV8.ANNOTPLUS.SINFO.txt.impglr.LCL >GD462.ASE.COV8.ANNOTPLUS.SINFO.txt.impglr.LCL.passed
 cut -f 2 GD462.ASE.COV8.ANNOTPLUS.SINFO.txt.impglr.LCL.passed | sort -u >GD462.ASE.COV8.ANNOTPLUS.SINFO.txt.impglr.LCL.passed.genes
+
+echo 'perl ~/utilities/intersect_keepheader.pl ../failed_examples_ensg2name.txt 0 ../../../data/geuvadis/GD462.ASE.COV8.ANNOTPLUS.SINFO.txt 21 >GD462.ASE.COV8.ANNOTPLUS.SINFO.failed_examples.txt' | qsub
+
+d <- read.table("GD462.ASE.COV8.ANNOTPLUS.SINFO.txt.impglr.final_impr.txt", header=T, as.is=T)
+d[,3] <- replace(d[,3], d[,3]=="INPP5F", "INPP5F_V2")
+write.table(d, "GD462.ASE.COV8.ANNOTPLUS.SINFO.txt.impglr.final_impr.txt", sep="\t", quote=F, row.names=F)
+
+d <- read.table("GD462.ASE.COV8.ANNOTPLUS.SINFO.txt.impglr.known.txt", header=T, as.is=T)
+d[,3] <- replace(d[,3], d[,3]=="INPP5F", "INPP5F_V2")
+write.table(d, "GD462.ASE.COV8.ANNOTPLUS.SINFO.txt.impglr.known.txt", sep="\t", quote=F, row.names=F)
 
 
 cd ~/tuuli_lab/tlappalainen/imprint/analysis/imprint/gencord/
 echo 'perl ~/utilities/intersect_keepheader.pl ../final_impr_genelist_ensg2name.txt 0 ../../../data/gencord/GENCORD.536.2MIMP.ASE.COV16.ANNOTPLUS.SINFO.txt 21 >GENCORD.536.2MIMP.ASE.COV16.ANNOTPLUS.SINFO.final_impr.txt' | qsub
 echo 'perl ~/utilities/intersect_keepheader.pl ../final_impr_genelist_ensg2name.txt 0 ../../../data/imprint/gencord/GENCORD.536.2MIMP.ASE.COV16.ANNOTPLUS.SINFO.txt.filter5.model15.indxgen.txt 1 >GENCORD.536.2MIMP.ASE.COV16.ANNOTPLUS.SINFO.txt.filter5.model15.indxgen.final_impr.txt' | qsub
 echo 'perl ~/utilities/intersect_keepheader.pl ../final_impr_genelist_ensg2name.txt 0 ../../../data/imprint/gencord/GENCORD.536.2MIMP.ASE.COV16.ANNOTPLUS.SINFO.txt.impglr 1 >GENCORD.536.2MIMP.ASE.COV16.ANNOTPLUS.SINFO.txt.impglr.final_impr.txt' | qsub
-echo 'perl ~/utilities/intersect_keepheader.pl ../known_morcos_geneimprint_ensg2name.txt 0 ../../../data/imprint/gencord/GENCORD.536.2MIMP.ASE.COV16.ANNOTPLUS.SINFO.txt.impglr 1 >GENCORD.536.2MIMP.ASE.COV16.ANNOTPLUS.SINFO.txt.impglr.known.txt' | qsub
+echo 'perl ~/utilities/intersect_keepheader.pl ../known_otago_ensg2name.txt 0 ../../../data/imprint/gencord/GENCORD.536.2MIMP.ASE.COV16.ANNOTPLUS.SINFO.txt.impglr 1 >GENCORD.536.2MIMP.ASE.COV16.ANNOTPLUS.SINFO.txt.impglr.known.txt' | qsub
+echo 'perl ~/utilities/intersect_keepheader.pl ../extra_ensg2name.txt 0 ../../../data/gencord/GENCORD.536.2MIMP.ASE.COV16.ANNOTPLUS.SINFO.txt 21 >GENCORD.536.2MIMP.ASE.COV16.ANNOTPLUS.SINFO.extra.txt' | qsub
+echo 'perl ~/utilities/intersect_keepheader.pl ../extra_ensg2name.txt 0 ../../../data/imprint/gencord/GENCORD.536.2MIMP.ASE.COV16.ANNOTPLUS.SINFO.txt.filter5.model15.indxgen.txt 1 >GENCORD.536.2MIMP.ASE.COV16.ANNOTPLUS.SINFO.txt.filter5.model15.indxgen.extra.txt' | qsub
+echo 'perl ~/utilities/intersect_keepheader.pl ../otago.human.bi_ensg2name.txt 0 ../../../data/gencord/GENCORD.536.2MIMP.ASE.COV16.ANNOTPLUS.SINFO.txt 21 >GENCORD.536.2MIMP.ASE.COV16.ANNOTPLUS.SINFO.otago.human.bi.txt' | qsub
+echo 'perl ~/utilities/intersect_keepheader.pl ../otago.human.bi_ensg2name.txt 0 ../../../data/imprint/gencord/GENCORD.536.2MIMP.ASE.COV16.ANNOTPLUS.SINFO.txt.filter5.model15.indxgen.txt 1 >GENCORD.536.2MIMP.ASE.COV16.ANNOTPLUS.SINFO.txt.filter5.model15.indxgen.otago.human.bi.txt' | qsub
+
 awk '$20>=5 && $21>=2 ' ../../../data/imprint/gencord/GENCORD.536.2MIMP.ASE.COV16.ANNOTPLUS.SINFO.txt.impglr >GENCORD.536.2MIMP.ASE.COV16.ANNOTPLUS.SINFO.txt.impglr.passed
 cut -f 2 GENCORD.536.2MIMP.ASE.COV16.ANNOTPLUS.SINFO.txt.impglr.passed | sort -u >GENCORD.536.2MIMP.ASE.COV16.ANNOTPLUS.SINFO.txt.impglr.passed.genes
 
+d <- read.table("GENCORD.536.2MIMP.ASE.COV16.ANNOTPLUS.SINFO.txt.impglr.final_impr.txt", header=T, as.is=T)
+d[,3] <- replace(d[,3], d[,3]=="INPP5F", "INPP5F_V2")
+write.table(d, "GENCORD.536.2MIMP.ASE.COV16.ANNOTPLUS.SINFO.txt.impglr.final_impr.txt", sep="\t", quote=F, row.names=F)
+
+d <- read.table("GENCORD.536.2MIMP.ASE.COV16.ANNOTPLUS.SINFO.txt.impglr.known.txt", header=T, as.is=T)
+d[,3] <- replace(d[,3], d[,3]=="INPP5F", "INPP5F_V2")
+write.table(d, "GENCORD.536.2MIMP.ASE.COV16.ANNOTPLUS.SINFO.txt.impglr.known.txt", sep="\t", quote=F, row.names=F)
 
 
 
@@ -237,21 +313,10 @@ cut -f 2 GENCORD.536.2MIMP.ASE.COV16.ANNOTPLUS.SINFO.txt.impglr.passed | sort -u
 ##########  Biallelic/imprinted classifications  ##########
 
 
-#the criteria for classifying genes to putatively imprinted/biallelic are described in the supplementary material
-
-
 cd ~/tuuli_lab/tlappalainen/imprint/analysis/imprint
 
-datal <- vector("list", 3)
-datal[[1]] <- read.table("GTEx.cBI_BI.final.txt", as.is=T, header=F)
-datal[[2]] <- read.table("GD.cBI_BI.final.txt", as.is=T, header=F)
-datal[[3]] <- read.table("GC.cBI_BI.final.txt", as.is=T, header=F)
-datal[[2]][,2] <- "GD-LCL"
-datal[[3]][,2][datal[[3]][,2]=="LCL"] <- "GC-LCL"
-datal[[3]][,2][datal[[3]][,2]=="FIBRBLS"] <- "GC-FIBRBLS"
-
-data <- do.call(rbind, datal)
-tis <- unique(data[,2])
+data <- read.table("final_impr_bi_imp.txt", header=T, as.is=T)
+tis <- unique(data[,1])
 gene <- unique(data[,3])
 tab <- matrix(length(gene), length(tis), data=NA)
 tab2 <- matrix(length(gene), length(tis), data=NA)
@@ -261,19 +326,10 @@ rownames(tab2) <- gene
 colnames(tab2) <- tis
 for(i in 1:length(tis)) {
 	for(j in 1:length(gene)) {
-		tmp <- data[data[,2]==tis[i] & data[,3]==gene[j],]
+		tmp <- data[data[,1]==tis[i] & data[,3]==gene[j],]
 		if (nrow(tmp)>0) {
 			tab[gene[j], tis[i]] <- tmp[1,4]
 			tab2[gene[j], tis[i]] <- tmp[1,5]
-		}
-	}
-}
-ma <- read.table("final_impr_tab.txt", as.is=T, row.names=NULL, header=F)
-for(i in 1:length(tis)) {
-	for(j in 1:length(gene)) {
-		if(any(ma[,1]==gene[j] & ma[,3]==tis[i])) {
-			tab[gene[j], tis[i]] <- "-"
-			tab2[gene[j], tis[i]] <- "-"
 		}
 	}
 }
@@ -282,16 +338,8 @@ write.table(tab2, "biallelic.weak.final.tab.txt", sep="\t", quote=F)
 
 
 #known genes
-datal <- vector("list", 3)
-datal[[1]] <- read.table("GTEx.cBI_BI.known.txt", as.is=T, header=F)
-datal[[2]] <- read.table("GD.cBI_BI.known.txt", as.is=T, header=F)
-datal[[3]] <- read.table("GC.cBI_BI.known.txt", as.is=T, header=F)
-datal[[2]][,2] <- "GD-LCL"
-datal[[3]][,2][datal[[3]][,2]=="LCL"] <- "GC-LCL"
-datal[[3]][,2][datal[[3]][,2]=="FIBRBLS"] <- "GC-FIBRBLS"
-
-data <- do.call(rbind, datal)
-tis <- unique(data[,2])
+data <- read.table("final_known_tab_bi_imp.txt", header=T, as.is=T)
+tis <- unique(data[,1])
 gene <- unique(data[,3])
 tab <- matrix(length(gene), length(tis), data=NA)
 tab2 <- matrix(length(gene), length(tis), data=NA)
@@ -301,79 +349,17 @@ rownames(tab2) <- gene
 colnames(tab2) <- tis
 for(i in 1:length(tis)) {
 	for(j in 1:length(gene)) {
-		tmp <- data[data[,2]==tis[i] & data[,3]==gene[j],]
+		tmp <- data[data[,1]==tis[i] & data[,3]==gene[j],]
 		if (nrow(tmp)>0) {
 			tab[gene[j], tis[i]] <- tmp[1,4]
 			tab2[gene[j], tis[i]] <- tmp[1,5]
 		}
 	}
 }
-ma <- read.table("final_impr_tab.txt", as.is=T, row.names=NULL, header=F)
-for(i in 1:length(tis)) {
-	for(j in 1:length(gene)) {
-		if(any(ma[,1]==gene[j] & ma[,3]==tis[i])) {
-			tab[gene[j], tis[i]] <- "-"
-			tab2[gene[j], tis[i]] <- "-"
-		}
-	}
-}
 write.table(tab, "biallelic.strong.known.tab.txt", sep="\t", quote=F)
 write.table(tab2, "biallelic.weak.known.tab.txt", sep="\t", quote=F)
 
-write.table(tab, "biallelic.strong.final.tab.txt", sep="\t", quote=F)
-write.table(tab2, "biallelic.weak.final.tab.txt", sep="\t", quote=F)
 
-
-
-
-
-
-
-##########  Maternal/paternal classifications  ##########
-
-
-
-##note that in geneimprint data, maternal/paternal refers to EXPRESSION, not imprinting
-gi <- read.table("geneimprint.txt", header=T, as.is=T, sep="\t")
-
-#manual fixing and adding data based on Pubmed/google of genes lacking direction
-gi[,1][gi[,1]=="IGF2AS"] <- "IGF2-AS"
-gi <- rbind(gi, c("ZNF331", " ", " ",  "Imprinted", "Paternal"), c("AL132709.5", " ", " ",  "Imprinted", "Paternal"), 
-c("PWRN1", " ", " ",  "Imprinted", "Paternal"), c("MEG9", " ", " ",  "Imprinted", "Maternal"))
-
-imp <- read.table("final_impr_tab.txt", as.is=T)
-ensg <- read.table("ensg2nametab.txt", as.is=T, sep="\t")
-ensg <- ensg[!duplicated(ensg[,2]),]
-rownames(ensg) <- ensg[,2]
-rn <- vector("character", nrow(gi))
-for(i in 1:nrow(gi)) {
-	gg <- c(gi[i,1], unlist(strsplit(gi[i,2], ",")))
-	gg <- paste(unlist(strsplit(gg,split=" ")), collapse=",")
-	gg <- c(unlist(strsplit(gg, ",")))
-	gg <- gg[gg!=""]
-	int <- intersect(gg, imp[,1])
-	if (length(int)>0) {
-		rn[i] <- int
-	} else {
-		rn[i] <- NA
-	}
-}
-gi <- gi[!is.na(rn),]
-gi[,2] <- rn[!is.na(rn)]
-rownames(gi) <- ensg[gi[,2],1]
-gif <- gi[gi[,"Expressed.Allele"]=="Maternal",]
-gim <- gi[gi[,"Expressed.Allele"]=="Paternal",]
-
-
-bitab <- read.table("biallelic.weak.final.tab.txt", as.is=T, row.names=1, header=T)
-tab <- bitab
-tab[tab=="?"] <- NA
-tab[tab=="-"] <- 1
-tab[tab=="+"] <- 0
-tab <- tab[c(gif[,2], gim[,2]),]
-Expr <- c(gif[,5], gim[,5])
-tabc <- cbind(Expr, tab)
-write.table(tabc, "biallelic.weak.final.tab.matpat.txt", quote=F, sep="\t")
 
 
 
@@ -385,8 +371,7 @@ write.table(tabc, "biallelic.weak.final.tab.matpat.txt", quote=F, sep="\t")
 ###########################################################################################################################################
 
 
-
-
+#statistics of total and biallelic ASE site counts
 gtex <- read.table("chrX/ase_stats_chrX_8_05_gtex.txt", as.is=T, header=T, sep="\t")
 gd <- read.table("chrX/ase_stats_chrX_8_05_gd.txt", as.is=T, header=T, sep="\t")
 gc <- read.table("chrX/ase_stats_chrX_16_gc.txt", as.is=T, header=T, sep="\t")
@@ -488,6 +473,167 @@ write.table(tab, "putative_clonal_samples_stats.txt", sep="\t", quote=F)
 
 
 ###########################################################################################################################################
+#                                                   Novelty and comparison to the mouse                                                             #
+###########################################################################################################################################
+
+
+ot <- read.table("otago.list.txt", as.is=T)
+o <- unique(ot[,c(2,5,6)])
+h <- read.table("biallelic.weak.final.tab.txt", as.is=T, row.names=1, header=T)
+hn <- mat.or.vec(nrow(h),2)
+for(i in 1:nrow(h)) {
+	tmp <- o[o[,1]==rownames(h)[i],]
+	if (nrow(tmp)==1) {
+		hn[i,1] <- tmp[1,2]
+		hn[i,2] <- tmp[1,3]
+	}
+	if (nrow(tmp)==0) {
+		hn[i,1] <- NA
+		hn[i,2] <- NA
+	}
+}
+rownames(hn) <- rownames(h)
+
+table(as.data.frame(hn))
+#   - GI Prov
+#  B 18  0    0
+#  H  8  2    2
+
+status <- hn[,1]
+status[is.na(status)] <- "Novel"
+status[hn[,2]=="GI"] <- "Provisional"
+status[hn[,2]=="Prov"] <- "Provisional"
+status[hn[,2]=="-"] <- "Known"
+
+write.table(status, "final_knownstatus.txt", col.names=F, sep="\t", quote=F)
+
+known_loci <- c("MEG9", "SNHG14", "LPAR6")
+provisional <- rownames(hn)[!is.na(hn[,2]) & (hn[,2]=="GI" | hn[,2]=="Prov")]
+human_mouse <- rownames(hn)[!is.na(hn[,1]) & hn[,1]=="B"]
+human <- setdiff(rownames(hn)[!is.na(hn[,1]) & hn[,1]=="H"], provisional)
+novel <- setdiff(rownames(hn)[is.na(hn[,1])], known_loci)
+l <- list(human_mouse, human, provisional, known_loci, novel)
+lapply(l, function(x) {paste(x, collapse=", ")})
+
+#[1] "PEG10, SNRPN, ZDBF2, KCNQ1, MEG3, MEST, H19, IGF2, DLK1, PLAGL1, GRB10, SNURF, NAP1L5, PEG3, NDN, UBE3A, MEG8, MAGEL2"
+#[1] "FAM50B, CPA4, ZNF597, INPP5F_V2, L3MBTL1, PWRN1, IGF2-AS, SGK2"
+#[1] "MAGI2, ZNF331, DIRAS3, NTM"
+#[1] "MEG9, SNHG14, LPAR6"
+#[1] "THEGL, PPIEL, UTS2, SYCE1, RP11-7F17.7, PRSS50, KIF25, UGT2B4, CST1"
+
+
+vec <- c(unlist(lapply(l, length)))
+names(vec) <- c("HS+MM", "HSconf", "HSprov", "NovelKnownLoci", "Novel")
+X11()
+pdf("rplots/genes_classes_barplot.pdf")
+par(mar=c(10,4,3,2))
+barplot(vec, las=3, col=c("springgreen3", "blue", "cyan3", "purple", "magenta3"), cex.names=1.3, ylab="Genes", cex.axis=1.3, cex.lab=1.3)
+dev.off()
+
+
+
+ot <- read.table("otago.list.txt", as.is=T)
+known_bitab2 <- read.table("biallelic.weak.known.tab.txt", as.is=T, row.names=1, header=T)
+known_bitab <- read.table("biallelic.strong.known.tab.txt", as.is=T, row.names=1, header=T)
+final_bitab2 <- read.table("biallelic.weak.final.tab.txt", as.is=T, row.names=1, header=T)
+final_bitab <- read.table("biallelic.strong.final.tab.txt", as.is=T, row.names=1, header=T)
+known_bitab2 <- unique(rbind(known_bitab2, final_bitab2))
+known_bitab <- unique(rbind(known_bitab, final_bitab))
+
+#prepare Table S6
+Imprinting_status <- vector("character", nrow(ot))
+for(i in 1:nrow(ot)) {
+	if (ot[i,2]=="-") {
+		Imprinting_status[i] <- "not evaluated"
+	} 
+	if (ot[i,5]=="M") {
+		Imprinting_status[i] <- "not evaluated"
+	} 
+	if (ot[i,2]!="-" & ot[i,5]!="M") {
+		if (any(rownames(known_bitab2)!=ot[i,2])) {
+			Imprinting_status[i] <- "no data"
+		} 
+		if (any(rownames(known_bitab2)==ot[i,2])) {
+			vec <- na.omit(as.character(known_bitab[ot[i, 2], ]))
+			vec2 <- na.omit(as.character(known_bitab2[ot[i, 2], ]))
+			Imprinting_status[i] <- "inconclusive data"
+			if (any(vec2=="+")) { 
+				Imprinting_status[i] <- "consistent with biallelic"
+			}
+			if (any(vec=="+")) { 
+				Imprinting_status[i] <- "biallelic"
+			}
+			if (any(vec2=="-")) { 
+				Imprinting_status[i] <- "consistent with imprinted"
+			}
+			if (any(vec=="-")) {
+				Imprinting_status[i] <- "imprinted"
+			}
+		} 
+	}
+}
+Imprinting_status[grep("MIR", ot[,2])] <- "small RNA gene"
+Imprinting_status[grep("SNOR", ot[,2])] <- "small RNA gene"
+
+table(Imprinting_status)
+#                biallelic consistent with biallelic consistent with imprinted 
+#                       41                         4                        28 
+#                imprinted                   no data             not evaluated 
+#                       32                        19                        36 
+#           small RNA gene 
+#                       37 
+                       
+colnames(ot) <- c("Human_GeneID", "Human_Genename", "Mouse_GeneID", "Mouse_Genename", "Imprinted_species", "Human_notes", "Mouse_notes")
+ot[,5][ot[,5]=="H"] <- "human"
+ot[,5][ot[,5]=="B"] <- "human, mouse"
+ot[,5][ot[,5]=="M"] <- "mouse"
+ot[,6][ot[,6]=="pdf"] <- "from otago pdf"
+ot[,6][ot[,6]=="GI"] <- "from geneimprint"
+ot[,6][ot[,6]=="Prov"] <- "provisional"
+ot[,6][ot[,6]=="Conf"] <- "conflicting"
+ot[,7][ot[,7]=="Ques"] <- "questionable"
+ot[,7][ot[,7]=="Prov"] <- "provisional"
+ot[,7][ot[,7]=="X"] <- "chrX"
+
+Imprinting_status_Baran <- Imprinting_status
+
+ot2 <- cbind(ot, Imprinting_status_Baran)
+ot2[,8] <- replace(as.character(ot2[,8]), as.character(ot2[,2])=="NLRP2", "failed validation")
+ot2[,8] <- replace(as.character(ot2[,8]), as.character(ot2[,2])=="HM13", "failed validation")
+
+ot2f <- ot2[ot2[,5]!="mouse",]
+write.table(ot2f, "table_S6_no_mouse.txt", row.names=F, sep="\t", quote=F)
+
+ot2f <- ot2f[ot2f[,6]=="-" | ot2f[,6]=="from otago pdf",]
+write.table(ot2f, "table_S6_no_mouse_otago_only.txt", row.names=F, sep="\t", quote=F)
+
+length(unique(ot2f[,2]))
+#107
+
+length(unique(ot2f[,2][ot2f[,8]=="no data"]))
+#16
+
+length(unique(ot2f[,2][ot2f[,8]=="small RNA gene"]))
+#miRNA/snoRNA 12
+
+ot2f <- ot2f[ot2f[,8]!="small RNA gene",]
+write.table(ot2f, "table_S6_no_mouse_otago_only_no_smallRNA.txt", row.names=F, sep="\t", quote=F)
+
+length(unique(ot2f[,2]))
+#95
+
+length(unique(ot2f[,2][ot2f[,8]=="biallelic" | ot2f[,8]=="consistent with biallelic" | ot2f[,8]=="imprinted" | ot2f[,8]=="consistent with imprinted"]))
+#79
+
+length(unique(ot2f[,2][ot2f[,8]=="imprinted"]))
+#26
+
+length(unique(ot2f[,2][ot2f[,8]=="biallelic"]))
+#31 biallelic, no signs of imprinting
+
+
+
+###########################################################################################################################################
 #                                                              Gene scatterplots                                                          #
 ###########################################################################################################################################
 
@@ -534,8 +680,126 @@ g <- ens2ginv[ge,2]
 spl2 <- spl2[ge]
 spl <- spl[ge]
 for(i in 1:length(ge)) {
+	X11(height=5,width=5)
+#	pdf(paste("rplots_snp_scatter/tissuescatters_", g[i], ".pdf", sep=""))
+	for(j in 1:length(spl2[[i]]))  {
+		ma <- max(c(spl2[[i]][[j]][,8], spl2[[i]][[j]][,9]))
+		plot(spl2[[i]][[j]][,8], spl2[[i]][[j]][,9], main=paste(g[i], names(spl2[[i]])[j]), xlab="REF", ylab="NONREF", xlim=c(0,ma), ylim=c(0,ma))
+	}
+	dev.off()
+}
+
+
+#other genes of interest
+
+datal <- vector("list", 3)
+datal[[1]] <- read.table("gtex/GTEX.1582.5MIMP.ASE.COV8.ANNOTPLUSGT.SINFO.BR.extra.txt", as.is=T, header=T, sep="\t")
+datal[[2]] <- read.table("geuvadis/GD462.ASE.COV8.ANNOTPLUS.SINFO.extra.txt", as.is=T, header=T, sep="\t", fill=T)
+colnames(datal[[2]]) <- colnames(datal[[1]])
+datal[[2]] <- datal[[2]][,1:28]
+datal[[3]] <- read.table("gencord/GENCORD.536.2MIMP.ASE.COV16.ANNOTPLUS.SINFO.extra.txt", as.is=T, header=T, sep="\t")
+for(i in 1:length(datal)) {
+	rownames(datal[[i]]) <- paste(datal[[i]][,1], datal[[i]][,2], sep="-")
+}
+datal[[2]][,"TISSUE"] <- "GD-LCL"
+datal[[3]][,"TISSUE"][datal[[3]][,"TISSUE"]=="LCL"] <- "GC-LCL"
+datal[[3]][,"TISSUE"][datal[[3]][,"TISSUE"]=="FIBRBLS"] <- "GC-FIBRBLS"
+
+data <- do.call(rbind, datal)
+spl <- split(data, data[,22])
+spl2 <- lapply(spl, function(x) {split(x, x[,28])})
+for(i in 1:length(spl2)) {
+	for(j in 1:length(spl2[[i]])) {
+		rownames(spl2[[i]][[j]]) <- paste(spl2[[i]][[j]][,2], spl2[[i]][[j]][,27], sep="-")
+	}
+}
+ens2g <- read.table("ensg2nametab.txt", as.is=T)
+ens2g <- ens2g[!duplicated(ens2g[,2]),]
+rownames(ens2g) <- ens2g[,2]
+gen <- read.table("extra_ensg2name.txt", as.is=T)
+g <- gen[,2]
+ge <- gen[,1]
+tis <- names(table(data$TISSUE))
+ens2ginv <- ens2g
+rownames(ens2ginv) <- ens2ginv[,1]
+ge <- intersect(ge, names(spl))
+g <- ens2ginv[ge,2]
+spl2 <- spl2[ge]
+spl <- spl[ge]
+for(i in 1:length(ge)) {
 #	X11(height=5,width=5)
-	pdf(paste("rplots_snp_scatter/tissuescatters_", g[i], ".pdf", sep=""))
+	pdf(paste("rplots_snp_scatter_extra/tissuescatters_", g[i], ".pdf", sep=""))
+	for(j in 1:length(spl2[[i]]))  {
+		ma <- max(c(spl2[[i]][[j]][,8], spl2[[i]][[j]][,9]))
+		plot(spl2[[i]][[j]][,8], spl2[[i]][[j]][,9], main=paste(g[i], names(spl2[[i]])[j]), xlab="REF", ylab="NONREF", xlim=c(0,ma), ylim=c(0,ma))
+	}
+	dev.off()
+}
+
+
+g <- c("PAX8")
+t1 <- "LUNG"
+ge <- ens2g[g,1]
+ens2ginv <- ens2g
+rownames(ens2ginv) <- ens2ginv[,1]
+ge <- intersect(ge, names(spl))
+g <- ens2ginv[ge,2]
+#X11(height=5,width=5)
+pdf(paste("rplots/snpscatter_PAX8.pdf", sep=""), height=5,width=5)
+j=1
+i=1
+td1 <- spl[[ge[i]]]
+td1 <- td1[td1[,28]=="LUNG",]
+plot(td1[,8], td1[,9], xlab=paste("REF count"), ylab=paste("ALT count"), col="black", lwd=2, cex.axis=1.5, cex.lab=1.5)
+legend("topleft", legend=c("PAX8 LUNG"), cex=1.5, bty="n")
+dev.off()
+
+
+
+
+#known genes
+
+datal <- vector("list", 3)
+datal[[1]] <- read.table("gtex/GTEX.1582.5MIMP.ASE.COV8.ANNOTPLUSGT.SINFO.BR.otago.human.bi.txt", as.is=T, header=T, sep="\t")
+datal[[2]] <- read.table("geuvadis/GD462.ASE.COV8.ANNOTPLUS.SINFO.otago.human.bi.txt", as.is=T, header=T, sep="\t", fill=T)
+colnames(datal[[2]]) <- colnames(datal[[1]])
+datal[[2]] <- datal[[2]][,1:28]
+datal[[3]] <- read.table("gencord/GENCORD.536.2MIMP.ASE.COV16.ANNOTPLUS.SINFO.otago.human.bi.txt", as.is=T, header=T, sep="\t")
+for(i in 1:length(datal)) {
+	rownames(datal[[i]]) <- paste(datal[[i]][,1], datal[[i]][,2], sep="-")
+}
+datal[[2]][,"TISSUE"] <- "GD-LCL"
+datal[[3]][,"TISSUE"][datal[[3]][,"TISSUE"]=="LCL"] <- "GC-LCL"
+datal[[3]][,"TISSUE"][datal[[3]][,"TISSUE"]=="FIBRBLS"] <- "GC-FIBRBLS"
+
+data <- do.call(rbind, datal)
+spl <- split(data, data[,22])
+#length(spl)
+#[1] 77
+spl2 <- lapply(spl, function(x) {split(x, x[,28])})
+for(i in 1:length(spl2)) {
+	for(j in 1:length(spl2[[i]])) {
+		rownames(spl2[[i]][[j]]) <- paste(spl2[[i]][[j]][,2], spl2[[i]][[j]][,27], sep="-")
+	}
+}
+ens2g <- read.table("ensg2nametab.txt", as.is=T)
+ens2g <- ens2g[!duplicated(ens2g[,2]),]
+rownames(ens2g) <- ens2g[,2]
+gen <- read.table("otago.human.bi_ensg2name.txt", as.is=T)
+g <- gen[,2]
+ge <- gen[,1]
+tis <- names(table(data$TISSUE))
+ens2ginv <- ens2g
+rownames(ens2ginv) <- ens2ginv[,1]
+ge <- intersect(ge, names(spl))
+g <- ens2ginv[ge,2]
+spl2 <- spl2[ge]
+spl <- spl[ge]
+#length(spl)
+#[1] 77
+for(i in 1:length(ge)) {
+#	X11(height=5,width=5)
+	pdf(paste("rplots_snp_scatter_known/tissuescatters_", g[i], ".pdf", sep=""))
 	for(j in 1:length(spl2[[i]]))  {
 		ma <- max(c(spl2[[i]][[j]][,8], spl2[[i]][[j]][,9]))
 		plot(spl2[[i]][[j]][,8], spl2[[i]][[j]][,9], main=paste(g[i], names(spl2[[i]])[j]), xlab="REF", ylab="NONREF", xlim=c(0,ma), ylim=c(0,ma))
@@ -546,12 +810,70 @@ for(i in 1:length(ge)) {
 
 
 
+datal <- vector("list", 1)
+datal[[2]] <- read.table("geuvadis/GD462.ASE.COV8.ANNOTPLUS.SINFO.failed_examples.txt", as.is=T, header=T, sep="\t", fill=T)
+colnames(datal[[2]]) <- colnames(datal[[1]])
+datal[[2]] <- datal[[2]][,1:28]
+for(i in 1:length(datal)) {
+	rownames(datal[[i]]) <- paste(datal[[i]][,1], datal[[i]][,2], sep="-")
+}
+datal[[2]][,"TISSUE"] <- "GD-LCL"
+data <- do.call(rbind, datal)
+spl <- split(data, data[,22])
+spl2 <- lapply(spl, function(x) {split(x, x[,28])})
+for(i in 1:length(spl2)) {
+	for(j in 1:length(spl2[[i]])) {
+		rownames(spl2[[i]][[j]]) <- paste(spl2[[i]][[j]][,2], spl2[[i]][[j]][,27], sep="-")
+	}
+}
+ens2g <- read.table("ensg2nametab.txt", as.is=T)
+ens2g <- ens2g[!duplicated(ens2g[,2]),]
+rownames(ens2g) <- ens2g[,2]
+gen <- read.table("final_impr_genelist_ensg2name.txt", as.is=T)
+
+g <- c("MAP2K3")
+t1 <- "GD-LCL"
+ge <- ens2g[g,1]
+ens2ginv <- ens2g
+rownames(ens2ginv) <- ens2ginv[,1]
+ge <- intersect(ge, names(spl))
+g <- ens2ginv[ge,2]
+#X11(height=5,width=5)
+pdf(paste("rplots/snpscatter_MAP2K3.pdf", sep=""), height=5,width=5)
+j=1
+i=1
+td1 <- spl[[ge[i]]]
+plot(td1[,8], td1[,9], xlab=paste("REF count"), ylab=paste("ALT count"), col="black", lwd=2, cex.axis=1.5, cex.lab=1.5)
+legend("topright", legend=c("MAP2K3 GD-LCL"), cex=1.5, bty="n")
+dev.off()
+
+g <- c("UQCRFS1")
+t1 <- "GD-LCL"
+ge <- ens2g[g,1]
+ens2ginv <- ens2g
+rownames(ens2ginv) <- ens2ginv[,1]
+ge <- intersect(ge, names(spl))
+g <- ens2ginv[ge,2]
+#X11(height=5,width=5)
+pdf(paste("rplots/snpscatter_UQCRFS1.pdf", sep=""), height=5,width=5)
+j=1
+i=1
+td1 <- spl[[ge[i]]]
+plot(td1[,8], td1[,9], xlab=paste("REF count"), ylab=paste("ALT count"), col="black", lwd=2, cex.axis=1.5, cex.lab=1.5)
+legend("topleft", legend=c("UQCRFS1 GD-LCL"), cex=1.5, bty="n")
+dev.off()
+
+
+
+
+
+
 ##brain subtissues
 
 br_subs <- read.table("../../data/gtex/braintissues.txt", as.is=T)[,1]
 datal <- vector("list", length(br_subs))
 for(i in 1:length(br_subs)) {
-	datal[[i]] <- read.table(paste("~/tuuli_lab/tlappalainen/imprint/data/gtex/brsub/GTEX.1582.5MIMP.ASE.COV8.ANNOTPLUSGT.SINFO.BRAIN_", br_subs[i], ".final_impr", sep=""), as.is=T, header=F, sep="\t")
+	datal[[i]] <- read.table(paste("~/tuuli_lab/tlappalainen/imprint/data/gtex/brsub/GTEX.1582.5MIMP.ASE.COV8.ANNOTPLUSGT.SINFO.BRAIN_", br_subs[i], ".impr.txt", sep=""), as.is=T, header=F, sep="\t")
 	rownames(datal[[i]]) <- paste(datal[[i]][,1], datal[[i]][,2], sep="-")
 }
 data <- do.call(rbind, datal)
@@ -605,7 +927,6 @@ dev.off()
 
 
 
-
 ##########  Haplotype-based counts  ##########
 
 
@@ -631,7 +952,7 @@ for(i in 1:length(spl2)) {
 ens2g <- read.table("ensg2nametab.txt", as.is=T)
 ens2g <- ens2g[!duplicated(ens2g[,2]),]
 rownames(ens2g) <- ens2g[,2]
-gen <- read.table("ensg2nametab_putative_final_list_2803.txt", as.is=T)
+gen <- read.table("final_impr_genelist_ensg2name.txt", as.is=T)
 g <- gen[,2]
 ge <- gen[,1]
 tis <- names(table(data$TISSUE))
@@ -670,17 +991,40 @@ ge <- intersect(ge, names(spl))
 g <- ens2ginv[ge,2]
 
 #X11(height=5,width=5)
-pdf(paste("rplots/snpscatter_MEST.pdf", sep=""), height=5,width=5)
+pdf(paste("rplots/haploscatter_MEST.pdf", sep=""), height=5,width=5)
 j=1
 i=1
 td1 <- spl2[[ge[i]]][[t1]]
-plot(td1[,4], td1[,5], xlab=paste("Haplo 1 count"), ylab=paste("Haplo 2 count"), col="olivedrab3", lwd=2, cex.axis=1.5, cex.lab=1.5, xlim=c(0,100), ylim=c(0,100))
+plot(td1[,4], td1[,5], xlab=paste("Haplo 1 count"), ylab=paste("Haplo 2 count"), col="royalblue3", lwd=2, cex.axis=1.5, cex.lab=1.5, xlim=c(0,100), ylim=c(0,100))
 td2 <- spl2[[ge[i]]][[t2[j]]]
-points(td2[,4], td2[,5], col="grey30", lwd=2)
+points(td2[,4], td2[,5], col="black", lwd=2)
+legend("topleft", fill=c("royalblue3", "black"), legend=c("MEST LUNG", "MEST TESTIS"), bty="n")
 dev.off()
 #excluding 7 data points >100 counts
 
+data <- datal[[1]]
+spl <- split(data, data[,2])
+spl2 <- lapply(spl, function(x) {split(x, x[,1])})
+for(i in 1:length(spl2)) {
+	for(j in 1:length(spl2[[i]])) {
+		rownames(spl2[[i]][[j]]) <- paste(spl2[[i]][[j]][,2], spl2[[i]][[j]][,3], sep="-")
+	}
+}
+g <- c("DLK1")
+t1 <- "HRTLV"
+ge <- ens2g[g,1]
+ens2ginv <- ens2g
+rownames(ens2ginv) <- ens2ginv[,1]
+ge <- intersect(ge, names(spl))
+g <- ens2ginv[ge,2]
 
+#X11(height=5,width=5)
+pdf(paste("rplots/haploscatter_DLK1.pdf", sep=""), height=5,width=5)
+i=1
+td1 <- spl2[[ge[i]]][[t1]]
+plot(td1[,4], td1[,5], xlab=paste("Haplo 1 count"), ylab=paste("Haplo 2 count"), col="royalblue3", lwd=2, cex.axis=1.5, cex.lab=1.5, xlim=c(0,150), ylim=c(0,150))
+legend("topleft", text.col=c("royalblue3"), legend=c("DLK1 HRTLV"), bty="n")
+dev.off()
 
 
 
@@ -791,6 +1135,9 @@ for(i in 1:length(ge)) {
 
 
 
+
+
+
 ###########################################################################################################################################
 #                                                   Imprinting across tissues                                                             #
 ###########################################################################################################################################
@@ -804,9 +1151,11 @@ datal <- vector("list", 3)
 datal[[1]] <- read.table("gtex/GTEX.1582.5MIMP.ASE.COV8.ANNOTPLUSGT.SINFO.BR.txt.impglr.final_impr.txt", as.is=T, header=T, sep="\t")
 datal[[2]] <- read.table("gencord/GENCORD.536.2MIMP.ASE.COV16.ANNOTPLUS.SINFO.txt.impglr.final_impr.txt", as.is=T, header=T, sep="\t")
 datal[[3]] <- read.table("geuvadis/GD462.ASE.COV8.ANNOTPLUS.SINFO.txt.impglr.final_impr.txt", as.is=T, header=T, sep="\t", fill=T)
-known <- read.table("known_morcos_geneimprint_ensg2name.txt", as.is=T)[,1]
+known <- read.table("known_otago_ensg2name.txt", as.is=T)[,1]
+status <- read.table("final_knownstatus.txt", row.names=1, sep="\t", as.is=T)
+putative <- rownames(status)[status=="Provisional"]
+k <- rownames(status)[status=="Known"]
 ensg <- read.table("ensg2nametab.txt", as.is=T, sep="\t", row.names=1)
-k <- na.omit(ensg[known,1])
 datal[[2]][,"tissue"][datal[[2]][,"tissue"]=="LCL"] <- "GC-LCL"
 datal[[2]][,"tissue"][datal[[2]][,"tissue"]=="FIBRBLS"] <- "GC-FIBRBLS"
 datal[[2]][,"tissue"][datal[[2]][,"tissue"]=="TCELL"] <- "GC-TCELL"
@@ -819,10 +1168,14 @@ tis <- unique(unlist(lapply(datal, function(x) {x[,1]})))
 g <- unique(unlist(lapply(datal, function(x) {x[,3]})))
 gn <- g
 for(i in 1:length(g)) {
-	if (any(k==gn[i])) {
+	if (any(putative==g[i])) {
 		gn[i] <- paste(g[i], "*", sep="")
 	}
+	if (any(k==g[i])) {
+		gn[i] <- paste(g[i], "**", sep="")
+	}
 }
+
 stat <- c("max_m") ## == tau
 tabs <- vector("list", length(stat))
 names(tabs) <- stat
@@ -849,6 +1202,7 @@ for(i in 1:length(stat)) {
 }
 
 
+
 pos <- read.table("~/tuuli_lab/tlappalainen/resource/gencode.v12.annotation.tab.gene", as.is=T)
 rownames(pos) <- unlist(lapply(strsplit(pos[,9], ".", fixed=T), function(x) {x[1]}))
 ensgi <- read.table("ensg2nametab.txt", as.is=T, sep="\t")
@@ -861,6 +1215,18 @@ p <- paste(poss[,1], round(tss/1000000, 1), sep=":")
 c <- as.numeric(substr(poss[,1], 4, nchar(poss[,1])))
 p2 <- paste(c, round(tss/1000000, 1), sep=":")
 s <- order(c, tss, decreasing=T)
+
+
+#save positions and data for landscape plots
+
+pos_filt <- pos[pos[,14]=="lincRNA" | pos[,14]=="protein_coding",]
+gene_bed <- pos_filt[,c(1,4,5,13)]
+col <- rep("255,255,255", nrow(gene_bed))
+gene_bed <- cbind(gene_bed, rep("1000", nrow(gene_bed)), pos_filt[,7], pos_filt[,4], pos_filt[,5], col)
+write.table(gene_bed, "gene_bed", sep="\t", col.names=F, row.names=F, quote=F)
+p_print <- paste(poss[,1], paste(tss-1500000, tss+1500000, sep="-"), sep=":")
+write.table(sort(p_print), "positions_1.5MB.txt", quote=F, row.names=F, col.names=F)
+
 i=1
 #	X11(height=9, width=8)
 pdf(paste("rplots/heatmap_impr_tau.pdf", sep=""), height=9, width=8)
@@ -893,9 +1259,11 @@ cd ~/tuuli_lab/tlappalainen/imprint/analysis/imprint
 
 datal <- vector("list", 1)
 datal[[1]] <- read.table("~/tuuli_lab/tlappalainen/imprint/data/imprint/gtex/brainsub_res_proc/GTEX.1582.5MIMP.ASE.COV8.ANNOTPLUSGT.SINFO.BRAIN.txt.impglr", as.is=T, header=F, sep="\t")
-known <- read.table("known_morcos_geneimprint_ensg2name.txt", as.is=T)[,1]
+known <- read.table("known_otago_ensg2name.txt", as.is=T)[,1]
+status <- read.table("final_knownstatus.txt", row.names=1, sep="\t", as.is=T)
+putative <- rownames(status)[status=="Provisional"]
+k <- rownames(status)[status=="Known"]
 ensg <- read.table("ensg2nametab.txt", as.is=T, sep="\t", row.names=1)
-k <- na.omit(ensg[known,1])
 for(i in 1:length(datal)) {
 	rownames(datal[[i]]) <- paste(datal[[i]][,2], datal[[i]][,1], sep="-")
 }
@@ -904,10 +1272,14 @@ tis <- unique(unlist(lapply(datal, function(x) {x[,1]})))
 g <- unique(unlist(lapply(datal, function(x) {x[,3]})))
 gn <- g
 for(i in 1:length(g)) {
-	if (any(k==gn[i])) {
+	if (any(putative==g[i])) {
 		gn[i] <- paste(g[i], "*", sep="")
 	}
+	if (any(k==g[i])) {
+		gn[i] <- paste(g[i], "**", sep="")
+	}
 }
+gn[gn=="INPP5F"] <- "INPP5F_V2**"
 stat <- c("max_m")
 tabs <- vector("list", length(stat))
 names(tabs) <- stat
@@ -927,8 +1299,6 @@ for(i in 1:length(stat)) {
 }
 printtab <- tabs[["max_m"]]
 rownames(printtab) <- g
-write.table(printtab, "impr_tau_tab.txt", quote=F, sep="\t")
-
 write.table(printtab, "impr_tau_brainsub_tab.txt", quote=F, sep="\t")
 for(i in 1:length(stat)) {
 	rownames(tabs[[i]]) <- gn
@@ -978,6 +1348,7 @@ datal[[3]][,"tissue"] <- "GD-LCL"
 for(i in 1:length(datal)) {
 	rownames(datal[[i]]) <- paste(datal[[i]][,2], datal[[i]][,1], sep="-")
 }
+gen <- read.table("final_impr_genelist_ensg2name.txt", as.is=T)
 data <- do.call(rbind, datal)
 tis <- unique(unlist(lapply(datal, function(x) {x[,1]})))
 g <- unique(unlist(lapply(datal, function(x) {x[,3]})))
@@ -993,13 +1364,17 @@ for(i in 1:length(stat)) {
 			if (length(data[data[,3]==g[x] & data[,1]==tis[y],stat[i]])==0) {
 				tabs[[i]][x,y] <- NA 
 			} else {
-				tabs[[i]][x,y] <- data[data[,3]==g[x] & data[,1]==tis[y],stat[i]]
+				tabs[[i]][x,y] <- median(data[data[,3]==g[x] & data[,1]==tis[y],stat[i]])
 			}
 		}
 	}
 }
+##remove imprinted genes
 for(i in 1:length(stat)) {
-	rownames(tabs[[i]]) <- paste(g, "*", sep="")
+	sd <- setdiff(rownames(tabs[[i]]), gen[,2])
+	tabs[[i]] <- tabs[[i]][sd,]
+	g <- rownames(tabs[[i]])
+	rownames(tabs[[i]]) <- paste(rownames(tabs[[i]]), "**", sep="")
 }
 pos <- read.table("~/tuuli_lab/tlappalainen/resource/gencode.v12.annotation.tab.gene", as.is=T)
 rownames(pos) <- unlist(lapply(strsplit(pos[,9], ".", fixed=T), function(x) {x[1]}))
@@ -1014,7 +1389,7 @@ c <- as.numeric(substr(poss[,1], 4, nchar(poss[,1])))
 p2 <- paste(c, round(tss/1000000, 1), sep=":")
 s <- order(c, tss, decreasing=T)
 i=1
-pdf(paste("rplots/heatmap_known_tau.pdf", sep=""), height=9, width=8)
+pdf(paste("rplots/heatmap_known_tau.pdf", sep=""), height=12, width=8)
 par(mar=c(7,8,3,6))
 ptab <- tabs[[i]][s,]
 natab <- tabs[[i]][s,]
@@ -1059,7 +1434,7 @@ s3 <- order((counts[,3] + counts[,4])/counts[,6], decreasing=T)
 #X11(width=7, height=5)
 pdf("rplots/biallelic.impr.barplot.pdf", width=10, height=7)
 par(mar=c(7,5,3,2))
-barplot(t(apply(counts[,1:5], 2, function(x) {x/counts[,6]}))[,s3], las=3, col=c("yellow", "goldenrod2", "red", "red3", "grey"), ylab="Proportion of genes", cex.axis=1.3, cex.lab=1.3)
+barplot(t(apply(counts[,c(1,2,4,3,5)], 2, function(x) {x/counts[,6]}))[,s3], las=3, col=c("yellow", "goldenrod2", "red", "red3", "grey"), ylab="Proportion of genes", cex.axis=1.3, cex.lab=1.3)
 dev.off()
 
 
@@ -1076,9 +1451,8 @@ colnames(pvec) <- c("FisherP", "MA_tissue", "MA_others")
 	
 plim <- 0.05/nrow(pvec)
 #pvec[pvec[,1]<plim,]
-#TESTIS     3.498870e-07 0.7297297 0.3112583
 pvec["TESTIS",1]*nrow(pvec)
-#1.294582e-05
+#0.0002392241
 
 
 
@@ -1094,12 +1468,14 @@ for(i in 1:nrow(bitab)) {
 	counts[i,6] <- length(which(!is.na(bitab[i,])))
 }
 
+length(which(counts[,2]>0))
+#34
 
 s3 <- order((counts[,3] + counts[,4])/counts[,6], decreasing=T)
 #X11(width=7, height=5)
 pdf("rplots/biallelic.impr.barplot.genes.pdf", width=10, height=7)
 par(mar=c(7.5,5,3,2))
-barplot(t(counts[,1:5])[,s3], las=3, col=c("yellow", "goldenrod2", "red", "red3", "grey"), ylab="Tissues", ylim=c(0,55), cex.axis=1.3, cex.lab=1.3)
+barplot(t(counts[,c(1,2,4,3,5)])[,s3], las=3, col=c("yellow", "goldenrod2", "red", "red3", "grey"), ylab="Tissues", ylim=c(0,55), cex.axis=1.3, cex.lab=1.3)
 legend("topright", fill=c("red3", "red", "goldenrod2", "yellow", "grey"), legend=c("Strong MAE", "MAE", "BAE", "Strong BAE", "?"), ncol=3, bty="n")
 dev.off()
 
@@ -1150,13 +1526,18 @@ s3 <- order((counts[,3] + counts[,4])/counts[,6], decreasing=T)
 #X11(width=7, height=5)
 pdf("rplots/biallelic.known.barplot.pdf", width=10, height=7)
 par(mar=c(7,5,3,2))
-barplot(t(apply(counts[,1:5], 2, function(x) {x/counts[,6]}))[,s3], las=3, col=c("yellow", "goldenrod2", "red", "red3", "grey"), ylab="Proportion of genes", cex.axis=1.3, cex.lab=1.3)
+barplot(t(apply(counts[,c(1,2,4,3,5)], 2, function(x) {x/counts[,6]}))[,s3], las=3, col=c("yellow", "goldenrod2", "red", "red3", "grey"), ylab="Proportion of genes", cex.axis=1.3, cex.lab=1.3)
 #legend("topright", fill=c("red", "yellow"), legend=c("Monoall", "Biall"), ncol=2, bty="n", cex=1.2)
 dev.off()
 
 
 
 ##Geneplots
+
+final <- read.table("biallelic.weak.final.tab.txt", as.is=T, row.names=1, header=T)
+sd <- setdiff(rownames(bitab), rownames(final))
+bitab <- bitab[sd,]
+bitab2 <- bitab2[sd,]
 
 counts <- mat.or.vec(nrow(bitab), 6)
 colnames(counts) <- c("BISTR", "BIW", "MOSTR", "MOW", "QU", "XNA") 
@@ -1169,15 +1550,13 @@ for(i in 1:nrow(bitab)) {
 	counts[i,5] <- length(which(bitab[i,]=="?" & !is.na(bitab[i,])))
 	counts[i,6] <- length(which(!is.na(bitab[i,])))
 }
-length(which(counts[,3]==0 & counts[,4]==0 & counts[,1]!="?" & counts[,2]>0)) #no monoallelic obs per gene 
-#[1] 23
 
 
-s3 <- order((counts[,3] + counts[,4])/counts[,6], decreasing=T)
+s3 <- order(counts[,6], decreasing=F)
 #X11(width=10, height=5)
-pdf("rplots/biallelic.known.barplot.genes.pdf", width=10, height=7)
+pdf("rplots/biallelic.known.barplot.genes.pdf", width=12, height=7)
 par(mar=c(7.5,5,3,2))
-barplot(t(counts[,1:5])[,s3], las=3, col=c("yellow", "goldenrod2", "red", "red3", "grey"), ylab="Tissues", ylim=c(0,45), cex.axis=1.3, cex.lab=1.3)
+barplot(t(counts[,c(1,2,4,3,5)])[,s3], las=3, col=c("yellow", "goldenrod2", "red", "red3", "grey"), ylab="Tissues", ylim=c(0,45), cex.axis=1.3, cex.lab=1.3)
 legend("topright", fill=c("red3", "red", "goldenrod2", "yellow", "grey"), legend=c("Strong MAE", "MAE", "BAE", "Strong BAE", "?"), ncol=3, bty="n")
 dev.off()
 
@@ -1187,19 +1566,19 @@ dev.off()
 
 ########   Maternal/paternal differences  #########
 
-
-
-
-
-matpat <- read.table("biallelic.weak.final.tab.matpat.txt", as.is=T, row.names=1, header=T)
-mae <- rownames(matpat)[matpat[,1]=="Maternal"]
-pae <- rownames(matpat)[matpat[,1]=="Paternal"]
+matpat <- read.table("impr_known_matpat.txt", as.is=T, header=T, row.names=1)
+matpat <- matpat[rownames(matpat)!="IGF2" & rownames(matpat)!="GRB10",]
+mae <- rownames(matpat)[matpat[,3]=="Maternal"]
+pae <- rownames(matpat)[matpat[,3]=="Paternal"]
 
 bitab <- read.table("biallelic.weak.final.tab.txt", as.is=T, row.names=1, header=T)
 bitab2 <- read.table("biallelic.strong.final.tab.txt", as.is=T, row.names=1, header=T)
 gen <- read.table("final_impr_genelist_ensg2name.txt", as.is=T)
 bitab <- bitab[intersect(gen[,2], rownames(bitab)),]
 bitab2 <- bitab2[rownames(bitab),]
+
+#bitab <- bitab[,colnames(bitab)!="TESTIS"]
+#bitab2 <- bitab2[,colnames(bitab2)!="TESTIS"]
 
 counts <- mat.or.vec(ncol(bitab), 6)
 colnames(counts) <- c("MATM", "MATB", "PATM", "PATB", "MATE", "PATE") 
@@ -1219,9 +1598,8 @@ for(i in 1:ncol(bitab)) {
 pdf("rplots/biallelic.impr.biall.barplot1_matpat.pdf", width=10, height=7)
 par(mar=c(8,5,3,2))
 s3 <- order((counts[,1]+counts[,2])/apply(counts[,1:4], 1, sum), decreasing=T)
-barplot(t(counts[,c(1:4)]/apply(counts[,1:4], 1, sum))[,s3], las=3, col=c( "royalblue2", "royalblue4", "red", "red4"), ylab="Proportion of genes", cex.axis=1.5, cex.lab=1.5, cex.names=1.3, ylim=c(0,1.2))
-legend("topright", fill=c( "royalblue3", "royalblue4", "red", "red4"), legend=c("MAE Pat Impr", "BAE Pat Impr", "MAE Mat Impr", "BAE Mat Impr"), ncol=4, bty="n", cex=1.3)
-abline(h=29/(29+58), lwd=2)  ##total numbers of known maternal/paternal genes
+barplot(t(counts[,c(1:4)]/apply(counts[,1:4], 1, sum))[,s3], las=3, col=c( "red", "red4", "royalblue2", "royalblue4"), ylab="Proportion of genes", cex.axis=1.5, cex.lab=1.5, cex.names=1.3, ylim=c(0,1.2))
+legend("topright", fill=c("red", "red4", "royalblue3", "royalblue4"), legend=c("MAE Mat Expr", "BAE Mat Expr", "MAE Pat Expr", "BAE Pat Expr"), ncol=4, bty="n", cex=1.3)
 dev.off()
 
 
@@ -1235,7 +1613,7 @@ for(i in 1:nrow(bitab)) {
 	counts[i,2] <- length(which(bitab[i,]=="+" & !is.na(bitab[i,])))
 	counts[i,3] <- length(which(!is.na(bitab[i,])))
 }
-##1 = paternal imprinting, 0 = maternal imprinting
+##1 = maternal expression, 0 = paternal expression
 dirvec <- c(rep(1, length(mae)), rep(0, length(pae)))
 names(dirvec) <- c(mae, pae)
 int <- intersect(names(dirvec), rownames(counts))
@@ -1248,16 +1626,16 @@ tmp2 <- countsf[dirvec==0,1:2]
 tmp2 <- tmp2[order(tmp2[,2]/(tmp2[,2]+tmp2[,1]), decreasing=T),]
 posvec <- c(rep(0.2, nrow(tmp1)), 2.5, rep(0.2, nrow(tmp2)-1))
 pdf("rplots/biallelic.patmat.pergene.barplot.merged.pdf", height=5, width=7)
+#X11(height=5, width=7)
 par(mar=c(7,4.5,2,2))
 barplot(t(rbind(tmp1, tmp2)), col=c("red", "yellow"), las=3, ylab="Tissues", cex.axis=1.5, cex.lab=1.5, space=posvec, ylim=c(0,45))
-text(x=5.5, y=37, labels="Paternal", cex=1.4)
-text(x=25, y=37, labels="Maternal", cex=1.4)
+text(x=5.5, y=37, labels="Maternal", cex=1.4)
+text(x=25, y=37, labels="Paternal", cex=1.4)
 legend("topright", fill=c("red", "yellow"), legend=c("Imprinted", "Biallelic"), cex=1.1, bty="n", ncol=2)
 dev.off()
 
-
 ##permutation test
-np <- 10000
+np <- 100000
 pres <- mat.or.vec(np, 2)
 colnames(pres) <- c("pi_perm", "mi_perm")
 for(i in 1:np) {
@@ -1268,7 +1646,47 @@ for(i in 1:np) {
 pi_emp <- sum(countsf[dirvec==1,1])/sum(countsf[dirvec==1,3])
 mi_emp <- sum(countsf[dirvec==0,1])/sum(countsf[dirvec==0,3])
 length(which(pi_emp>pres[,1]))/np
-#p=0.0328
+#p=0.06252
+
+
+
+
+
+
+
+tau <- read.table("impr_tau_tab.txt", as.is=T, sep="\t", header=T, row.names=1)
+
+matpat <- read.table("impr_known_matpat.txt", as.is=T, header=T, row.names=1)
+matpat <- matpat[rownames(matpat)!="IGF2" & rownames(matpat)!="GRB10",]
+mae <- intersect(rownames(tau), rownames(matpat)[matpat[,3]=="Maternal"])
+pae <- intersect(rownames(tau), rownames(matpat)[matpat[,3]=="Paternal"])
+
+
+tau_mp <- tau[c(mae, pae),]
+tau_m <- tau[mae,]
+tau_p <- tau[pae,]
+
+
+X11(height=4, width=8)
+pdf("rplots/mat_pat_tau.pdf", height=4, width=8)
+par(mfrow=c(1,2))
+hist(unlist(tau_m), main="Maternally expr", xlab="tau", col="grey")
+hist(unlist(tau_p), main="Paternally expr", xlab="tau", col="grey")
+dev.off()
+
+
+lm <- length(mae)
+lp <- length(pae)
+np <- 1000
+pres <- mat.or.vec(np, 2)
+colnames(pres) <- c("pi_perm", "mi_perm")
+for(i in 1:np) {
+	s <- sample(c(mae, pae))
+	tau_m_p <- tau[s[1:lm],]
+	tau_p_p <- tau[s[-c(1:lm)],]
+	pres[i,1] <- wilcox.test(unlist(tau_m_p), unlist(tau_p_p))$p.value
+}
+p_obs <- wilcox.test(unlist(tau_m), unlist(tau_p))$p.value
 
 
 
@@ -1286,7 +1704,8 @@ length(which(pi_emp>pres[,1]))/np
 
 
 #from median expression level of each gene per tissue
-cp ~/tuuli_lab/tlappalainen/gtex/data/quantification/gene_tissue/RPKM_GeneLevel_December_analysis_freeze_tissuemedian.txt expr/
+cd ~/tuuli_lab/tlappalainen/imprint/analysis/expr_revision_2
+cp ~/tuuli_lab/tlappalainen/gtex/data/quantification/gene_tissue/RPKM_GeneLevel_December_analysis_freeze_tissuemedian.txt .
 
 
 #########  Heatmap  #########  
@@ -1324,10 +1743,11 @@ datalo <- datal
 gen <- read.table("final_impr_genelist_ensg2name.txt", as.is=T)
 g <- gen[,2]
 ge <- gen[,1]
-known <- read.table("known_morcos_geneimprint_ensg2name.txt", as.is=T)[,1]
+known <- read.table("known_otago_ensg2name.txt", as.is=T)[,1]
+status <- read.table("final_knownstatus.txt", row.names=1, sep="\t", as.is=T)
+putative <- rownames(status)[status=="Provisional"]
+kn <- rownames(status)[status=="Known"]
 ensg <- read.table("ensg2nametab.txt", as.is=T, sep="\t", row.names=1)
-kn <- ensg[known,1]
-kn <- kn[!is.na(kn)]
 
 for(i in 1:length(datal)) {
 	int <- intersect(ge, rownames(datal[[i]]))
@@ -1351,13 +1771,18 @@ data <- data[apply(data, 1, function(x) {!all(is.na(x))}),]
 tis <- colnames(data)
 gn <- g
 for(i in 1:length(g)) {
-	if (any(kn==gn[i])) {
+	if (any(putative==g[i])) {
 		gn[i] <- paste(g[i], "*", sep="")
 	}
+	if (any(kn==g[i])) {
+		gn[i] <- paste(g[i], "**", sep="")
+	}
 }
+
 tabs <- data
 rownames(tabs) <- g
 write.table(tabs, "impr_expr_tab.txt", sep="\t", quote=F)
+gn[gn=="INPP5F_V2**"] <- "INPP5F**"
 rownames(tabs) <- gn
 
 pos <- read.table("/data/research/tuuli_lab/tlappalainen/resource/gencode.v12.annotation.tab.gene", as.is=T)
@@ -1420,32 +1845,6 @@ spls <- spls[grep("GC.", names(spls), invert=T)]
 spls <- spls[grep("GD.", names(spls), invert=T)]
 spls <- lapply(spls, function(x) {x+0.001})
 spls <- lapply(spls, function(x) {replace(x, is.na(x), 0.001)})
-index <- 1
-index2 <- 1
-for(i in 1:length(spls)) {
-	val <- log2(spls[[i]])[log2(spls[[i]])!="-Inf"]
-	int <- intersect(names(val), dirlist[[1]])
-	l[[index]] <- val[int]
-	n[index] <- ""
-	pos[index] <- index2
-	index2 <- index2+1
-	index <- index+1
-	val <- log2(spls[[i]])[log2(spls[[i]])!="-Inf"]
-	int <- intersect(names(val), dirlist[[2]])
-	l[[index]] <- val[int]
-	n[index] <- names(spls)[i]
-	pos[index] <- index2
-	index2 <- index2+1
-	index <- index+1
-	val <- log2(spls[[i]])[log2(spls[[i]])!="-Inf"]
-	int <- intersect(names(val), dirlist[[3]])
-	l[[index]] <- val[int]
-	n[index] <- ""
-	pos[index] <- index2
-	index2 <- index2+1.5
-	index <- index+1
-}
-
 
 #X11(height=4, width=8)
 pdf("rplots/tissue_rpkm_boxplot.pdf", height=4, width=8)
@@ -1456,8 +1855,8 @@ dev.off()
 
 ##novel genes more tissue-specific?
 rownames(tabs) <- gn
-ke <- tabs[grep("*", rownames(tabs), fixed=T),]
-ne <- tabs[grep("*", rownames(tabs), fixed=T, invert=T),]
+ke <- tabs[grep("**", rownames(tabs), fixed=T),]
+ne <- tabs[grep("**", rownames(tabs), fixed=T, invert=T),]
 lim <- 0.1
 knum <- apply(ke, 1, function(x) {length(which(x>lim))})
 nnum <- apply(ne, 1, function(x) {length(which(x>lim))})
@@ -1474,30 +1873,38 @@ dev.off()
 #########  imprinted status vs expression level  #########  
 
 
-expr <- read.table("impr_expr_tab.txt", header=T, row.names=1)
-rownames(expr) <- unlist(lapply(strsplit(rownames(expr), "*", fixed=T), function(x) {x[1]}))
+expr <- read.table("impr_expr_tab.txt", header=T, row.names=1, check.names=F)
+colnames(expr)[colnames(expr)=="GC-FIBRBLS"] <- "GC_FIBRBLS"
+colnames(expr)[colnames(expr)=="GC-TELL"] <- "GC_TCELL"
+colnames(expr)[colnames(expr)=="GC-LCL"] <- "GC_LCL"
+colnames(expr)[colnames(expr)=="GD-LCL"] <- "GD_LCL"
 bitab <- read.table("biallelic.weak.final.tab.txt", as.is=T, row.names=1, header=T)
+expr <- expr[rownames(bitab),]
+expr <- expr[,colnames(bitab)]
 elist <- vector("list", nrow(expr))
 names(elist) <- rownames(expr)
 for(i in 1:nrow(expr)) {
 	elist[[i]] <- vector("list", 2)
-	elist[[i]][[1]] <- expr[i,which(as.vector(bitab[rownames(expr)[i],]=="+"))]
-	elist[[i]][[2]] <- expr[i,which(as.vector(bitab[rownames(expr)[i],]=="-"))]
+	elist[[i]][[1]] <- expr[i,colnames(bitab)[bitab[i,]=="+" & !is.na(bitab[i,])]]
+	elist[[i]][[2]] <- expr[i,colnames(bitab)[bitab[i,]=="-" & !is.na(bitab[i,])]]
 	elist[[i]][[1]] <- elist[[i]][[1]][!is.na(elist[[i]][[1]])]
 	elist[[i]][[2]] <- elist[[i]][[2]][!is.na(elist[[i]][[2]])]
 }
-tab <- mat.or.vec(nrow(expr), 5)
+#1 = biallelic, 2 is imprinted
+tab <- mat.or.vec(nrow(expr), 6)
 rownames(tab) <- rownames(expr)
-colnames(tab) <- c("N_BAE", "N_MAE", "MEDIAN_BAE", "MEDIAN_MAE", "P_MW")
+colnames(tab) <- c("N_BAE", "N_MAE", "MEDIAN_BAE", "MEDIAN_MAE", "P_MW", "P_MW_DOUBLE")
 for(i in 1:nrow(expr)) {
 	tab[i,1] <- length(elist[[i]][[1]])	
 	tab[i,2] <- length(elist[[i]][[2]])	
-	tab[i,3] <- median(as.numeric(elist[[i]][[1]]))	
-	tab[i,4] <- median(as.numeric(elist[[i]][[2]]))
+	tab[i,3] <- median(as.numeric(elist[[i]][[1]]), na.rm=T)	
+	tab[i,4] <- median(as.numeric(elist[[i]][[2]]), na.rm=T)
 	if (tab[i,1]>0 & tab[i,2]>0) {
 		tab[i,5] <- wilcox.test(as.numeric(elist[[i]][[1]]), as.numeric(elist[[i]][[2]]))$p.value
+		tab[i,6] <- wilcox.test(as.numeric(elist[[i]][[1]])*2, as.numeric(elist[[i]][[2]]))$p.value
 	} else {
 		tab[i,5] <- NA
+		tab[i,6] <- NA
 	}
 }
 
@@ -1518,55 +1925,47 @@ pdf("rplots/expr_bae_mae_pergene.pdf", height=5, width=15)
 par(mar=c(10,4,2,2))
 boxplot(lapply(elist, function(x) {log2(x[[1]]+0.001)})[s], at=posvec, col="yellow", las=3, border="goldenrod3", ylim=c(mi, ma), ylab="log2 RPKM", names=names(elist)[s], cex.axis=1.3, cex.lab=1.3, cex=0.5, lwd=1.2)
 boxplot(lapply(elist, function(x) {log2(x[[2]]+0.001)})[s], at=posvec+1, col="red", add=T, names=rep("", length(elist)), border="red3", cex.axis=1.3, cex.lab=1.3, cex=0.5, lwd=1.2)
+points(y=unlist(lapply(elist, function(x) {median(log2((x[[2]]+0.001)*2))}))[s], x=posvec, col="black", pch=3, lwd=1)
 legend("topright", ncol=2, fill=c("yellow", "red"), legend=c("Biallelic", "Imprinted"), bty="n", cex=1.3)
 dev.off()
 
+
+tab <- tab[!is.na(tab[,3]) & !is.na(tab[,4]),]
+tabf <- tab[tab[,1]>1 & tab[,2]>1,]
+
+val <- c(tabf[,3], tabf[,4])
+val <- val[!is.na(val)]
+val <- log2(val)
+val <- val[val!="-Inf" & val!="Inf"]
+mi <- min(val)-1.5
+ma <- max(val)+1
+#X11(height=5, width=5)
+pdf("rplots/expr_bae_mae_pergene_scatter_multitis.pdf", height=5, width=5)
+plot(log2(tabf[,4]+0.001), log2(tabf[,3]+0.001), lwd=2, col="white", xlab="Median log2 RPKM, IMP tissues", ylab="Median log2 RPKM, BI tissues", cex.axis=1.3, cex.lab=1.3, xlim=c(mi, ma), ylim=c(mi, ma))
+text(log2(tabf[,4]+0.001), log2(tabf[,3]+0.001), labels=rownames(tabf))
+abline(0,1)
+dev.off()
+
+
+val <- c(tabf[,3], tabf[,4])
+val <- val[!is.na(val)]
+val <- log2(val)
+val <- val[val!="-Inf" & val!="Inf"]
+mi <- min(val)-1.5
+ma <- max(val)+1
+#X11(height=5, width=5)
+pdf("rplots/expr_bae_mae_pergene_scatter_noname_multitis.pdf", height=5, width=5)
+plot(log2(tabf[,4]+0.001), log2(tabf[,3]+0.001), lwd=2, col="white", xlab="Median log2 RPKM, IMP tissues", ylab="Median log2 RPKM, BI tissues", cex.axis=1.3, cex.lab=1.3, xlim=c(mi, ma), ylim=c(mi, ma))
+points(log2(tabf[,4]+0.001)[log2(tabf[,4]+0.001)>log2(tabf[,3]+0.001)], log2(tabf[,3]+0.001)[log2(tabf[,4]+0.001)>log2(tabf[,3]+0.001)], col="red", lwd=2)
+points(log2(tabf[,4]+0.001)[log2(tabf[,3]+0.001)>=log2(tabf[,4]+0.001)], log2(tabf[,3]+0.001)[log2(tabf[,3]+0.001)>=log2(tabf[,4]+0.001)], col="Goldenrod", lwd=2)
+abline(0,1)
+dev.off()
+
+
 wilcox.test(tab[,3], tab[,4], paired=T)
-#p-value = 0.09109
-
-binom.test(length(which(tab[,3]>tab[,4])), length(which(tab[,3]>tab[,4]))+length(which(tab[,3]<tab[,4])))
-#p-value = 0.09887
-pval <- round(binom.test(length(which(tab[,3]>tab[,4])), length(which(tab[,3]>tab[,4]))+length(which(tab[,3]<tab[,4])))$p.value, 3)
-
-val <- c(tab[,3], tab[,4])
-val <- val[!is.na(val)]
-val <- log2(val)
-val <- val[val!="-Inf" & val!="Inf"]
-mi <- min(val)-1.5
-ma <- max(val)+1
-#X11(height=5, width=5)
-pdf("rplots/expr_bae_mae_pergene_scatter_noname.pdf", height=5, width=5)
-plot(log2(tab[,3]), log2(tab[,4]), lwd=2, col="white", xlab="Median log2 RPKM, IMP tissues", ylab="Median log2 RPKM, BI tissues", cex.axis=1.3, cex.lab=1.3, xlim=c(mi, ma), ylim=c(mi, ma))
-points(log2(tab[,3])[log2(tab[,3])>log2(tab[,4])], log2(tab[,4])[log2(tab[,3])>log2(tab[,4])], col="red", lwd=2)
-points(log2(tab[,3])[log2(tab[,3])<=log2(tab[,4])], log2(tab[,4])[log2(tab[,3])<=log2(tab[,4])], col="Goldenrod", lwd=2)
-abline(0,1)
-text(x=(5.5), y=(4.5), labels=length(which(tab[,3]>tab[,4])), cex=1.5, col="black")
-text(x=(4.5), y=(5.5), labels=length(which(tab[,3]<tab[,4])), cex=1.5, col="black")
-text(x=(1), y=(5.5), labels=paste("p =", pval), cex=1.5, col="black")
-dev.off()
-
-val <- c(tab[,3], tab[,4])
-val <- val[!is.na(val)]
-val <- log2(val)
-val <- val[val!="-Inf" & val!="Inf"]
-mi <- min(val)-1.5
-ma <- max(val)+1
-#X11(height=5, width=5)
-pdf("rplots/expr_bae_mae_pergene_scatter.pdf", height=5, width=5)
-plot(log2(tab[,3]), log2(tab[,4]), lwd=2, col="white", xlab="Median log2 RPKM, IMP tissues", ylab="Median log2 RPKM, BI tissues", cex.axis=1.3, cex.lab=1.3, xlim=c(mi, ma), ylim=c(mi, ma))
-text(log2(tab[,3])[log2(tab[,3])>log2(tab[,4])], log2(tab[,4])[log2(tab[,3])>log2(tab[,4])], labels=rownames(tab)[log2(tab[,3])>log2(tab[,4])], col="red")
-text(log2(tab[,3])[log2(tab[,3])<=log2(tab[,4])], log2(tab[,4])[log2(tab[,3])<=log2(tab[,4])], labels=rownames(tab)[log2(tab[,3])<=log2(tab[,4])], col="Goldenrod")
-abline(0,1)
-text(x=(5.5), y=(4.5), labels=length(which(tab[,3]>tab[,4])), cex=1.5, col="black")
-text(x=(4.5), y=(5.5), labels=length(which(tab[,3]<tab[,4])), cex=1.5, col="black")
-text(x=(1), y=(5.5), labels=paste("p =", pval), cex=1.5, col="black")
-dev.off()
-
-
-
-
-
-
+#p-value = 0.6978
+wilcox.test(tabf[,3], tabf[,4], paired=T)
+#p=0.6507
 
 
 
@@ -1766,7 +2165,7 @@ natab <- natab[s,]
 pdf(paste("rplots/ZNF331_ind_tis_snp_heatmap_main.pdf", sep=""), height=7, width=7)
 par(mar=c(7,7,3,3))
 image((max(tab, na.rm=T))-(t(tab)), xaxt="n", xlab="",  yaxt="n", ylab="", cex.axis=1.7, cex.lab=1.7, col=heat.colors(20))
-image(t(natab), add=T, xaxt="n", xlab="",  yaxt="n", ylab="", cex.axis=1.7, cex.lab=1.7, col="grey")
+image(t(natab), add=T, xaxt="", xlab="",  yaxt="n", ylab="", cex.axis=1.7, cex.lab=1.7, col="grey")
 axis(at=0:(nrow(t(tab))-1)/(nrow(t(tab))-1), labels=rownames(t(tab)), side=1, las=3, cex.axis=1.5, cex.lab=1.5)
 axis(at=0:(ncol(t(tab))-1)/(ncol(t(tab))-1), labels=colnames(t(tab)), side=2, las=1, cex.axis=1.5, cex.lab=1.5)
 dev.off()
@@ -1828,11 +2227,10 @@ info <- info[int,]
 med <- unlist(lapply(spl, function(x) {median(0.5+abs(0.5-(x[,4]/(x[,4]+x[,5]))))}))
 
 cor.test(info[,3], med, method="s")
-#p=0.6567
+#rho = -0.0547, p=0.5158
 
 wilcox.test(med[info[,2]==1], med[info[,2]==2])
-#p=0.6532
-
+#p=0.802
 
 
 
@@ -1894,7 +2292,7 @@ for(i in 1:length(med2)) {
 tab <- tab[!is.na(tab[,1]),]
 plim <- 0.05/(nrow(tab))
 tab["MSCLSK",4]*nrow(tab)
-#[1] 0.002640288
+#[1] 0.01345125
 
 write.table(tab, "age_sex_tissues.txt", quote=F, sep="\t")
 
@@ -1957,14 +2355,18 @@ write.table(tab, "sex_muscle_pergene.txt", quote=F, sep="\t")
 colvec <- rep("blue", nrow(tab))  
 colvec[tab[,1]<0] <- "red"
 
-X11(height=5, width=5)
-#pdf("rplots/sexdiff_musle_pergene.pdf", height=5, width=5)
+#X11(height=5, width=5)
+pdf("rplots/sexdiff_musle_pergene.pdf", height=5, width=5)
 plot(tab[,2], tab[,1], xlim=c(-0.1,1.1), ylim=c(-0.1, 0.1), xlab="Male/female p-value", ylab="Median MAE M-F", cex.axis=1.5, cex.lab=1.5, col="white")
 text(tab[,2], tab[,1], rownames(tab), col=colvec)
 dev.off()
 
+#X11(height=5, width=5)
+pdf("rplots/sexdiff_musle_pergene_points.pdf", height=5, width=5)
+plot(tab[,2], tab[,1], xlim=c(-0.1,1.1), ylim=c(-0.1, 0.1), xlab="Male/female p-value", ylab="Median MAE M-F", cex.axis=1.5, cex.lab=1.5)
+dev.off()
 
-
+#adjust label positions manually
 
 
 
@@ -1974,7 +2376,7 @@ dev.off()
 
 #Diff expr data from GTEx transcriptome paper
 
-cd /data/tlappala/imprint/analysis/expr
+cd ~/tuuli_lab/tlappalainen/imprint/analysis/expr_revision_2
 
 tot <- read.table("../imprint/gtex/GTEX.1582.5MIMP.ASE.COV8.ANNOTPLUSGT.SINFO.BR.txt.impglr.passed.genes", as.is=T)
 imp <- read.table("../imprint/final_impr_tab.txt", as.is=T)
@@ -2049,53 +2451,69 @@ gen <- read.table("../imprint/final_impr_genelist_ensg2name.txt", as.is=T)
 int <- intersect(gen[,1], rownames(tesex))
 tesexi <- tesex[int,]
 rownames(gen) <- gen[,2]
-
-matpat <- read.table("../imprint/biallelic.weak.final.tab.matpat.txt", as.is=T, row.names=1, header=T)
-mae <- rownames(matpat)[matpat[,1]=="Maternal"]
-pae <- rownames(matpat)[matpat[,1]=="Paternal"]
-mae <- gen[mae,1]
-pae <- gen[pae,1]
-intf <- intersect(rownames(tesexi), mae)
-intm <- intersect(rownames(tesexi), pae)
+matpat <- read.table("../imprint/impr_known_matpat.txt", as.is=T, header=T, row.names=2)
+matpat <- matpat[matpat[,1]!="IGF2" & matpat[,1]!="GRB10",]
+int <- intersect(gen[,1], rownames(matpat))
+matpat <- matpat[int,]
+mae <- rownames(matpat)[matpat[,3]=="Maternal" & !is.na(matpat[,3])]
+pae <- rownames(matpat)[matpat[,3]=="Paternal" & !is.na(matpat[,3])]
 
 ###collect fold change of each gene across tissues
 fdl <- vector("list", length(unique(imp[,2])))
 names(fdl) <- unique(imp[,2])
 for(j in 1:length(fdl)) {
-for(i in 1:length(tisa)) {
-	tesex <- tesexl[[i]]
-	rownames(tesex) <- unlist(lapply(strsplit(tesex[,1], ".", fixed=T), function(x) {x[1]}))
-	int <- intersect(rownames(tesex), names(fdl)[j])
-	if (length(int)>0) {
-		tesexi <- tesex[int,]
-		fdl[[j]] <- c(fdl[[j]], tesexi[,6])
+	for(i in 1:length(tisa)) {
+		tesex <- tesexl[[i]]
+		rownames(tesex) <- unlist(lapply(strsplit(tesex[,1], ".", fixed=T), function(x) {x[1]}))
+		int <- intersect(rownames(tesex), names(fdl)[j])
+		if (length(int)>0) {
+			tesexi <- tesex[int,]
+			fdl[[j]] <- c(fdl[[j]], tesexi[,6])
+		}
 	}
-}
 }
 
 colvec <- rep("grey", length(fdl))
 names(colvec) <- names(fdl)
-colvec[mae] <- "royalblue2"
-colvec[pae] <- "red"
+colvec[mae] <- "red"
+colvec[pae] <- "royalblue2"
 
+ensg <- read.table("../imprint/ensg2nametab.txt", as.is=T, sep="\t")
 rownames(ensg) <- ensg[,1]
 fdls <- fdl[order(colvec)]
 colvecs <- colvec[order(colvec)]
 n <- ensg[names(fdls),2]
+n[n=="INPP5F_V2"] <- "INPP5F"
 pdf("rplots/pergene_fc_boxplot.pdf", height=6, width=10)
 par(mar=c(9,5,2,2))
 boxplot(fdls, las=3, names=n, col=colvecs, ylab="log2 fold change M/F", cex.axis=1.3, cex.names=1.3, cex.lab=1.3)
 abline(h=0)
-legend("topright", legend=c("Paternal imprinting", "Maternal imprinting", "Unknown"), fill=c("royalblue2", "red", "grey"), cex=1.3, bty="n")
+legend("topright", legend=c("Maternal expression", "Paternal expression", "Unknown"), fill=c("red", "royalblue2","grey"), cex=1.3, bty="n")
 legend("topleft", legend=c("Expression F>M"), cex=1.3, bty="n")
 legend("bottomleft", legend=c("Expression M>F"), cex=1.3, bty="n")
 dev.off()
 
 
-
-
-
-
+#difference between M>F expression for mat/pat expressed genes
+mat <- fdls[colvecs=="red"]
+pat <- fdls[colvecs=="royalblue2"]
+mat <- mat[unlist(lapply(mat, length))>0]
+pat <- pat[unlist(lapply(pat, length))>0]
+empm <- length(which(unlist(mat)>0))/length(unlist(mat))
+#0.53
+empp <- length(which(unlist(pat)>0))/length(unlist(pat))
+#0.5
+perm <- 100000
+ratio_perm <- vector("numeric", perm)
+fdls_matpat <- fdls[colvecs!="grey"]
+fdls_matpat <- fdls_matpat[unlist(lapply(fdls_matpat, length))>0]
+vec <- c(rep(1, length(mat)), rep(0, length(pat)))
+for(i in 1:perm) {
+	vecs <- sample(vec)
+	ratio_perm[i] <- length(which(unlist(fdls_matpat[vecs==1])>0))/length(unlist(fdls_matpat[vecs==1]))
+}
+length(which(ratio_perm>empm))/perm
+#0.265
 
 
 
@@ -2161,185 +2579,6 @@ dev.off()
 
 
 
-#########  imprinting of SNPs in different transcripts  #########  
-
-
-
-data <- read.table("gtex/GTEX.1582.5MIMP.ASE.COV8.ANNOTPLUSGT.SINFO.BR.final_impr.txt", as.is=T, header=T, sep="\t")
-data <- data[data[,22]=="ENSG00000106070",]
-#look at tissues of interest: brain, blood, muscle
-data <- data[data[,28]=="WHLBLD" | data[,28]=="MSCLSK" | data[,28]=="BRAIN",]
-data <- data[data$SEVERE_IMPACT!="INTRON_VARIANT",]
-spl <- split(data, data[,2])
-spl2 <- lapply(spl, function(x) {split(x, x[,28])})
-for(i in 1:length(spl2)) {
-	for(j in 1:length(spl2[[i]])) {
-		rownames(spl2[[i]][[j]]) <- paste(spl2[[i]][[j]][,2], spl2[[i]][[j]][,27], sep="-")
-	}
-}
-
-
-brainsnps_all <- unique(data[data[,28]=="BRAIN", 2])
-#SNPs in key brain transcript
-brainsnps <- unique(data[intersect(which(data[,28]=="BRAIN"), grep("ENST00000439599", data[,20])), 2])
-
-#SNPs in the second brain transcript
-brainsnps2 <- unique(data[intersect(which(data[,28]=="BRAIN"), grep("ENST00000406641", data[,20])), 2])
-#setdiff(brainsnps, brainsnps2)
-#[1] "rs11555134" "rs6957344"  "rs4265140" 
-
-#are the SNPs unique to 2nd transcript imprinted?
-sel <- setdiff(brainsnps, brainsnps2)
-spl_sel <- spl[sel]
-data_sel <- do.call(rbind, spl_sel)
-data_sel <- data_sel[data_sel[,28]=="BRAIN",]
-#X11(height=5, width=5)
-pdf("rplots/GRB10_ENST00000406641_brain_scatter.pdf", height=5, width=5)
-plot(data_sel[,8], data_sel[,9], main="ENST00000406641 spec SNPs", xlab="REF count", ylab="NONREF count", cex.axis=1.3, cex.lab=1.3, lwd=2)
-dev.off()
-
-
-#SNPs in key blood transcripts
-bloodsnps_all <- unique(data[data[,28]=="WHLBLD", 2])
-bloodsnps <- unique(data[intersect(which(data[,28]=="WHLBLD"), grep("ENST00000461886", data[,20])), 2])
-bloodsnps2 <- unique(data[intersect(which(data[,28]=="WHLBLD"), grep("ENST00000335866", data[,20])), 2])
-bloodsnps3 <- unique(data[intersect(which(data[,28]=="WHLBLD"), grep("ENST00000398791", data[,20])), 2])
-#SNPs differing between transcripts:
-#1st covers all SNPs, nothign unique
-#2 has 12 SNPs that are not in 1, of which 12-5=7 are not in 3 either
-#3 has none that aren't in 2. 
-
-t1 <- "BRAIN"
-t2 <- "WHLBLD"
-#brain concordance of the main transcript
-sel <- intersect(brainsnps_all, bloodsnps)
-spl_sel <- spl[sel]
-data_sel <- do.call(rbind, spl_sel)
-data_sel <- data_sel[data_sel[,28]=="BRAIN" | data_sel[,28]=="WHLBLD",]
-spl3 <- split(data_sel, data_sel[,28])
-for(i in 1:length(spl3)) {
-	rownames(spl3[[i]]) <- paste(spl3[[i]][,27], spl3[[i]][,2], sep="-")
-}
-int <- intersect(rownames(spl3[[1]]), rownames(spl3[[2]]))
-r1 <- spl3[[1]][int,8]/spl3[[1]][int,10]
-r2 <- spl3[[2]][int,8]/spl3[[2]][int,10]
-lm1 <- lm(r2 ~ r1)
-#X11(height=5,width=5)
-pdf(paste("rplots/tissueplots_ENST00000461886_GRB10_", t1, "_", t2, ".pdf", sep=""), height=5,width=5)
-plot(r1, r2, xlab=paste("Ref/Total", t1), ylab=paste("Ref/Total", t2), main="ENST00000461886 SNP", xlim=c(0,1), ylim=c(0,1), lwd=2, cex.axis=1.3, cex.lab=1.3)
-dev.off()
-
-
-#brain concordance of the 2nd transcript
-sd <- setdiff(bloodsnps2, bloodsnps)
-sel <- intersect(brainsnps_all, sd)
-spl_sel <- spl[sel]
-data_sel <- do.call(rbind, spl_sel)
-data_sel <- data_sel[data_sel[,28]=="BRAIN" | data_sel[,28]=="WHLBLD",]
-spl3 <- split(data_sel, data_sel[,28])
-for(i in 1:length(spl3)) {
-	rownames(spl3[[i]]) <- paste(spl3[[i]][,27], spl3[[i]][,2], sep="-")
-}
-int <- intersect(rownames(spl3[[1]]), rownames(spl3[[2]]))
-r1 <- spl3[[1]][int,8]/spl3[[1]][int,10]
-r2 <- spl3[[2]][int,8]/spl3[[2]][int,10]
-lm1 <- lm(r2 ~ r1)
-#X11(height=5,width=5)
-pdf(paste("rplots/tissueplots_ENST00000335866_GRB10_", t1, "_", t2, ".pdf", sep=""), height=5,width=5)
-plot(r1, r2, xlab=paste("Ref/Total", t1), ylab=paste("Ref/Total", t2), main="ENST00000335866 spec SNPs", xlim=c(0,1), ylim=c(0,1), lwd=2, cex.axis=1.3, cex.lab=1.3)
-dev.off()
-
-#3rd transcript has no unique SNPs from tr2
-
-
-
-
-#SNPs in key muscle transcript
-musclesnps_all <- unique(data[data[,28]=="MSCLSK", 2])
-musclesnps <- unique(data[intersect(which(data[,28]=="MSCLSK"), grep("ENST00000406641", data[,20])), 2])
-musclesnps2 <- unique(data[intersect(which(data[,28]=="MSCLSK"), grep("ENST00000439599", data[,20])), 2])
-musclesnps3 <- unique(data[intersect(which(data[,28]=="MSCLSK"), grep("ENST00000398810", data[,20])), 2])
-
-#1st transcript (ENST00000406641) covers all SNPs, has nothing unique
-#2 and 3 are identical, and have SNPs that are not in 1
-
-#brain concordance of the main transcript ENST00000406641
-sel <- intersect(brainsnps_all, musclesnps)
-spl_sel <- spl[sel]
-data_sel <- do.call(rbind, spl_sel)
-data_sel <- data_sel[data_sel[,28]=="BRAIN" | data_sel[,28]=="MSCLSK",]
-spl3 <- split(data_sel, data_sel[,28])
-for(i in 1:length(spl3)) {
-	rownames(spl3[[i]]) <- paste(spl3[[i]][,27], spl3[[i]][,2], sep="-")
-}
-
-t1 <- "BRAIN"
-t2 <- "MSCLSK"
-int <- intersect(rownames(spl3[[1]]), rownames(spl3[[2]]))
-r1 <- spl3[[1]][int,8]/spl3[[1]][int,10]
-r2 <- spl3[[2]][int,8]/spl3[[2]][int,10]
-lm1 <- lm(r2 ~ r1)
-X11(height=5,width=5)
-pdf(paste("rplots/tissueplots_ENST00000406641_GRB10_", t1, "_", t2, ".pdf", sep=""), height=5,width=5)
-plot(r1, r2, xlab=paste("Ref/Total", t1), ylab=paste("Ref/Total", t2), main="ENST00000406641 SNPs", xlim=c(0,1), ylim=c(0,1), lwd=2, cex.axis=1.3, cex.lab=1.3)
-dev.off()
-
-
-#brain concordance of the 2nd transcript
-sd <- setdiff(musclesnps2, musclesnps)
-sel <- intersect(brainsnps_all, sd)
-spl_sel <- spl[sel]
-data_sel <- do.call(rbind, spl_sel)
-data_sel <- data_sel[data_sel[,28]=="BRAIN" | data_sel[,28]=="MSCLSK",]
-spl3 <- split(data_sel, data_sel[,28])
-for(i in 1:length(spl3)) {
-	rownames(spl3[[i]]) <- paste(spl3[[i]][,27], spl3[[i]][,2], sep="-")
-}
-
-t1 <- "BRAIN"
-t2 <- "MSCLSK"
-int <- intersect(rownames(spl3[[1]]), rownames(spl3[[2]]))
-r1 <- spl3[[1]][int,8]/spl3[[1]][int,10]
-r2 <- spl3[[2]][int,8]/spl3[[2]][int,10]
-lm1 <- lm(r2 ~ r1)
-#X11(height=5,width=5)
-pdf(paste("rplots/tissueplots_ENST00000439599_GRB10_", t1, "_", t2, ".pdf", sep=""), height=5,width=5)
-plot(r1, r2, xlab=paste("Ref/Total", t1), ylab=paste("Ref/Total", t2), main="ENST00000439599 spec SNPs", xlim=c(0,1), ylim=c(0,1), lwd=2, cex.axis=1.3, cex.lab=1.3)
-dev.off()
-
-
-
-
-#brain concordance of the 3rd transcript. No unique SNPs from tr2
-sd <- setdiff(bloodsnps3, bloodsnps2)
-
-#brain concordance of the 2nd transcript that's indepedent from 1 and 3
-sd <- setdiff(bloodsnps2, bloodsnps3)
-sd <- setdiff(sd, bloodsnps)
-sel <- intersect(brainsnps_all, sd)
-spl_sel <- spl[sel]
-data_sel <- do.call(rbind, spl_sel)
-data_sel <- data_sel[data_sel[,28]=="BRAIN" | data_sel[,28]=="WHLBLD",]
-spl3 <- split(data_sel, data_sel[,28])
-for(i in 1:length(spl3)) {
-	rownames(spl3[[i]]) <- paste(spl3[[i]][,27], spl3[[i]][,2], sep="-")
-}
-
-t1 <- "BRAIN"
-t2 <- "WHLBLD"
-int <- intersect(rownames(spl3[[1]]), rownames(spl3[[2]]))
-r1 <- spl3[[1]][int,8]/spl3[[1]][int,10]
-r2 <- spl3[[2]][int,8]/spl3[[2]][int,10]
-lm1 <- lm(r2 ~ r1)
-X11(height=5,width=5)
-#pdf(paste("rplots/tissueplots_ENST00000335866_1_3_GRB10_", t1, "_", t2, ".pdf", sep=""), height=5,width=5)
-plot(r1, r2, xlab=paste("Ref/Total", t1), ylab=paste("Ref/Total", t2), main="ENST00000335866 spec SNPs from 1st & 3rd", xlim=c(0,1), ylim=c(0,1), lwd=2, cex.axis=1.3, cex.lab=1.3)
-dev.off()
-
-##Transcripts 2,3 in blood appear to be leaky, imprinted. 1 has only 1 SNP that's covered by other transcripts too, 
-#but given the high expression of TR1, leaky imprinting in that SNP suggests that it's leaky imprinted too
-
-
 
 
 
@@ -2354,7 +2593,6 @@ cd /data/research/tuuli_lab/tlappalainen/imprint/data/methylation/gencord
 
 #########  annotations  #########  
 
-#the data files used in this analysis are part of Gutierrez-Arcelus et al. data set, and thus not provided.
 
 R
 #gene bodies and promoter regions
@@ -2414,15 +2652,17 @@ echo 'perl ~/utilities/intersect.pl methylation_sites_FILT4.gencode.v12.tss.tes.
 
 
 
-cd /data/research/tuuli_lab/tlappalainen/imprint/analysis/methylation
 
 
 #####   statistics of genes, promoters, DMRs    ######
 
+cd /data/research/tuuli_lab/tlappalainen/imprint/analysis/methylation
+
+
 metfiles <- c("Normalized_Beta_values_Fs_Genchord2_114_Y_float_OURF_filt.court_dmr.txt", 
 "Normalized_Beta_values_LCLs_Genchord2_119_Y_float_OURF_filt.court_dmr.txt", 
 "Normalized_Beta_values_Ts_Genchord2_69_Y_float_OURF_filt.court_dmr.txt")
-impname <- c("GC.FIBRBLS", "GC.LCL", "TCELL") 
+impname <- c("GC_FIBRBLS", "GC_LCL", "GC_TCELL") 
 name <- c("F-DMR", "L-DMR", "T-DMR")
 ens2g <- read.table("../imprint/ensg2nametab.txt", as.is=T)
 ens2g <- ens2g[!duplicated(ens2g[,2]),]
@@ -2430,7 +2670,7 @@ rownames(ens2g) <- ens2g[,2]
 ens2g2 <- ens2g
 rownames(ens2g2) <- ens2g2[,1]
 
-
+imp <- read.table("../imprint/biallelic.weak.final.tab.txt", as.is=T, row.names=1, header=T)
 gslist <- vector("list", 3)
 for(f in 1:length(metfiles)) {
     met <- read.table(paste("../../data/methylation/gencord/", metfiles[f], sep=""), as.is=T, header=T, sep="\t", row.names=NULL, fill=T)
@@ -2438,7 +2678,8 @@ for(f in 1:length(metfiles)) {
 	rownames(met) <- met[,1]
 	met <- met[,-1]
     rownames(met) <- unlist(lapply(strsplit(rownames(met), ".", fixed=T), function(x) {x[1]}))
-#    int <- intersect(rownames(met), rownames(imp))
+    #int <- intersect(rownames(met), rownames(imp))
+	
 
     spl <- apply(met, 1, function(x) {strsplit(x, ";")})
     metl <- vector("list", 6)
@@ -2579,14 +2820,16 @@ for(f in 1:length(metfiles)) {
     par(mfrow=c(3,3))
 	for(i in 1:8) {
     boxplot(list(gs1[[i]][int1], gs1[[i]][sd1], gs2[[i]][int2], gs2[[i]][sd2]), lwd=2, cex=1.5, ylab=names(gs)[i], col=c("orange", "grey"), ylim=c(quantile(gs[[i]], 0.05),1.1*max(c(quantile(gs[[i]], 0.98), dmr[,i+1]))),  names=c("Gene Impr", "Gene Others", "Prom Impr", "Prom Others"), las=3, cex.axis=1.5, cex.lab=1.5, xlim=c(0,7))
-	text(x=rep(6, nrow(dmr)), y=dmr[,i+1], labels=dmr[,1], col=colvec, cex=1.2)
+	points(x=rep(6, nrow(dmr)), y=dmr[,i+1], pch=3, lwd=2, col=colvec, cex=1.2)
+#	text(x=rep(6, nrow(dmr)), y=dmr[,i+1], labels=dmr[,1], col=colvec, cex=1.2)
 	ptab[i,1] <- wilcox.test(gs1[[i]][int1], gs1[[i]][sd1])$p.value
 	ptab[i,2] <- wilcox.test(gs2[[i]][int2], gs2[[i]][sd2])$p.value
 	}
     boxplot(list(abs(0.5-gs1[[4]])[int1], abs(0.5-gs1[[4]])[sd1], abs(0.5-gs2[[4]])[int2], abs(0.5-gs2[[4]])[sd2]), col=c("orange", "grey"), lwd=2, cex=1.5, 
     	ylab="|0.5-Median ind median|", ylim=c(min(c(abs(0.5-dmr[,5]), quantile(abs(0.5-gs[[4]]), 0.01))),quantile(abs(0.5-gs[[4]]), 0.99)), las=3, 
     		names=c("Gene Impr", "Gene Others", "Prom Impr", "Prom Others"), cex.axis=1.5, cex.lab=1.5, xlim=c(0,7))
-	text(x=rep(6, nrow(dmr)), y=abs(0.5-dmr[,5]), labels=dmr[,1], col=colvec, cex=1.2)
+#	text(x=rep(6, nrow(dmr)), y=abs(0.5-dmr[,5]), labels=dmr[,1], col=colvec, cex=1.2)
+	points(x=rep(6, nrow(dmr)), y=abs(0.5-dmr[,5]), pch=3, lwd=2, col=colvec, cex=1.2)
 
 	ptab[9,1] <- wilcox.test(abs(0.5-gs1[[4]])[int1], abs(0.5-gs1[[4]])[sd1])$p.value
 	ptab[9,2] <- wilcox.test(abs(0.5-gs2[[4]])[int2], abs(0.5-gs2[[4]])[sd2])$p.value
@@ -2595,7 +2838,6 @@ for(f in 1:length(metfiles)) {
 	write.table(ptab, paste("methstats_ptab_", name[f], ".txt", sep=""), sep="\t", quote=F)
 
 }
-
 
 
 #####    landscape plots    #####
@@ -2685,6 +2927,8 @@ for(f in 1:length(metfiles)) {
 
 
 cd ~/tuuli_lab/tlappalainen/imprint/analysis/imprint/mmpcr
+cp ~/tuuli_lab/tlappalainen/gtex/data/validation/ase_star/GTEX.121.MMPCR.STAR_IMPR.ASE.COV8.ANNOTPLUS.ID.SINFO.txt .
+perl ~/Geneva/utilities/intersect2columns_keepheader.pl GTEX.121.MMPCR.STAR_IMPR.ASE.COV8.ANNOTPLUS.ID.SINFO.txt 1 25 ../../../data/gtex/GTEX.1582.5MIMP.ASE.COV8.ANNOTPLUSGT.SINFO.BR.txt 1 0 >GTEX.1582.5MIMP.ASE.COV8.ANNOTPLUSGT.SINFO.BR.MMPCR.txt
 
 
 mm <- read.table("GTEX.121.MMPCR.STAR_IMPR.ASE.COV8.ANNOTPLUS.ID.SINFO.txt", as.is=T, header=T, sep="\t")
@@ -2755,6 +2999,8 @@ splmm <- split(mm, mm[,22])
 splrna <- split(rna, rna[,22])
 splmm2 <- lapply(splmm, function(x) {split(x, x[,29])})
 splrna2 <- lapply(splrna, function(x) {split(x, x[,28])})
+ensg <- read.table("../../imprint/ensg2nametab.txt", as.is=T, sep="\t")
+rownames(ensg) <- ensg[,1]
 
 for(i in 1:length(splmm2)) {
 	pdf(paste("rplots/scatter_snp_", ensg[names(splmm2)[i],1], "_mmpcr_star.pdf", sep=""), width=7, height=3.5)
